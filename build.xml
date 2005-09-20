@@ -1,5 +1,5 @@
 <project name="dnsjava" default="all" basedir=".">
-    <property name="build_dir" value="${basedir}"/>
+    <property name="build_dir" value="${basedir}/build/classes"/>
     <property name="src_dir" value="${basedir}"/>
     <property name="doc_dir" value="${basedir}/doc"/>
     <property name="dist_dir" value="${basedir}"/>
@@ -9,6 +9,8 @@
     <property name="jarname" value="dnsjava-${version}.jar"/>
     <property name="zipname" value="dnsjava-${version}.zip"/>
     <property name="targzname" value="dnsjava-${version}.tar.gz"/>
+
+    <property name="testcase" value="org.xbill.DNS.utils.base32Test" />
 
     <property name="j2se.javadoc"
       value="http://java.sun.com/j2se/1.4/docs/api/"/>
@@ -86,7 +88,8 @@
     </target>
 
     <target name="compile_tests" depends="compile">
-	<javac destdir="${tests_dir}" debug="true">
+	<javac destdir="${tests_dir}" debug="true" classpath="${build_dir}">
+
 	    <src path="${tests_dir}"/>
 	</javac>
     </target>
