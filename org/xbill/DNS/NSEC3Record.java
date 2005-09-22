@@ -46,11 +46,12 @@ public class NSEC3Record extends Record
    * @param types An array containing the types present.
    */
   public NSEC3Record(Name name, int dclass, long ttl, boolean AOFlag,
-      int hashAlg, byte[] salt, byte[] next, int[] types)
+      int hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
   {
     super(name, Type.NSEC, dclass, ttl);
     this.AOFlag = AOFlag;
     this.hashAlg = hashAlg;
+    this.iterations = iterations;
 
     this.salt = new byte[salt.length];
     System.arraycopy(salt, 0, this.salt, 0, salt.length);
@@ -129,11 +130,11 @@ public class NSEC3Record extends Record
     {
       salt = null;
     }
-    else 
+    else
     {
       salt = base16.fromString(salt_hex);
     }
-    
+
     String next_base32 = st.getString();
     next = base32.fromString(next_base32);
 
@@ -166,7 +167,7 @@ public class NSEC3Record extends Record
     sb.append(salt == null ? "0" : base16.toString(salt));
     sb.append(' ');
     sb.append(base32.toString(next).toLowerCase());
-    
+
     for (int i = 0; i < types.length; i++)
     {
       sb.append(" ");
@@ -181,6 +182,26 @@ public class NSEC3Record extends Record
     return next;
   }
 
+  public boolean getAuthoritativeOnlyFlag()
+  {
+    return AOFlag;
+  }
+  
+  public int getHashAlgorithm()
+  {
+    return hashAlg;
+  }
+  
+  public int getIterations()
+  {
+    return iterations;
+  }
+  
+  public byte[] getSalt()
+  {
+    return salt;
+  }
+  
   /** Returns the set of types defined for this name */
   public int[] getTypes()
   {
