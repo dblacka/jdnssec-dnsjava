@@ -3,6 +3,8 @@
 package org.xbill.DNS;
 
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import org.xbill.DNS.utils.base16;
@@ -22,13 +24,14 @@ import org.xbill.DNS.utils.base32;
 
 public class NSEC3Record extends Record
 {
+  public static final byte SHA1_DIGEST_ID = 1;
 
-  private boolean AOFlag;
-  private int     hashAlg;
-  private int     iterations;
-  private byte[]  salt;
-  private byte[]  next;
-  private int     types[];
+  private boolean          AOFlag;
+  private byte             hashAlg;
+  private int              iterations;
+  private byte[]           salt;
+  private byte[]           next;
+  private int              types[];
 
   NSEC3Record()
   {
@@ -46,7 +49,7 @@ public class NSEC3Record extends Record
    * @param types An array containing the types present.
    */
   public NSEC3Record(Name name, int dclass, long ttl, boolean AOFlag,
-      int hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
+      byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
   {
     super(name, Type.NSEC, dclass, ttl);
     this.AOFlag = AOFlag;
@@ -83,7 +86,7 @@ public class NSEC3Record extends Record
   {
     int first = in.readU8();
     AOFlag = (first & 0x80) != 0;
-    hashAlg = first & 0x7F;
+    hashAlg = (byte) (first & 0x7F);
     iterations = in.readU8() << 24 | in.readU16();
 
     int salt_length = in.readU8();
@@ -123,7 +126,7 @@ public class NSEC3Record extends Record
   {
     int aoflag = st.getUInt8();
     AOFlag = (aoflag != 0);
-    hashAlg = st.getUInt8(); // FIXME: check this for validity.
+    hashAlg = (byte) st.getUInt8(); // FIXME: check this for validity.
     iterations = (int) st.getUInt32();
     String salt_hex = st.getString();
     if (salt_hex.equals("0") || salt_hex.equals("00"))
@@ -182,26 +185,34 @@ public class NSEC3Record extends Record
     return next;
   }
 
+  /** Set the next field.*/
+  // Note: it is typical for implementations to have to set the 'next' field
+  // after creating the record.
+  public void setNext(byte[] next)
+  {
+    this.next = next;
+  }
+  
   public boolean getAuthoritativeOnlyFlag()
   {
     return AOFlag;
   }
-  
-  public int getHashAlgorithm()
+
+  public byte getHashAlgorithm()
   {
     return hashAlg;
   }
-  
+
   public int getIterations()
   {
     return iterations;
   }
-  
+
   public byte[] getSalt()
   {
     return salt;
   }
-  
+
   /** Returns the set of types defined for this name */
   public int[] getTypes()
   {
@@ -261,4 +272,37 @@ public class NSEC3Record extends Record
     mapToWire(out, types, mapbase, mapstart, types.length);
   }
 
+  public static byte[] hash(Name n, byte hash_algorithm, int iterations,
+      byte[] salt) throws NoSuchAlgorithmException
+  {
+    MessageDigest md;
+
+    switch (hash_algorithm)
+    {
+      case 1 :
+        md = MessageDigest.getInstance("SHA1");
+        break;
+      default :
+        throw new NoSuchAlgorithmException(
+            "Unknown NSEC3 algorithm identifier: " + hash_algorithm);
+    }
+    
+    // Construct our wire form.
+    byte[] wire_name = n.toWireCanonical();
+    byte[] res = wire_name; // for the first iteration.
+    for (int i = 0; i <= iterations; i++)
+    {
+      // concatinate the salt, if it exists.
+      if (salt != null)
+      {
+        byte[] concat = new byte[res.length + salt.length];
+        System.arraycopy(res, 0, concat, 0, res.length);
+        System.arraycopy(salt, 0, concat, res.length, salt.length);
+        res = concat;
+      }
+      res = md.digest(res);
+    }
+    
+    return res;
+  }
 }
