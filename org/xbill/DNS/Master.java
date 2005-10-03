@@ -97,7 +97,7 @@ Master(InputStream in, Name origin, long ttl) {
  */
 public
 Master(InputStream in, Name origin) {
-	this(in, origin, -1);
+	this(in, origin, 0);
 }
 
 /**
@@ -106,7 +106,7 @@ Master(InputStream in, Name origin) {
  */
 public
 Master(InputStream in) {
-	this(in, null, -1);
+	this(in, null, 0);
 }
 
 private Name
