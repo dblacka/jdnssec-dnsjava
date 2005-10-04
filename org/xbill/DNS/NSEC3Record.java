@@ -170,6 +170,7 @@ public class NSEC3Record extends Record
     sb.append(hashAlg);
     sb.append(' ');
     sb.append(iterations);
+    sb.append(' ');
     sb.append(salt == null ? "0" : base16.toString(salt));
     sb.append(' ');
     sb.append(base32.toString(next).toLowerCase());
