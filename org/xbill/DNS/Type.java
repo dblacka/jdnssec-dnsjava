@@ -169,6 +169,9 @@ public static final int MAILA		= 254;
 /** Matches any type */
 public static final int ANY		= 255;
 
+/** DNSSEC Lookaside Validation records. */
+public static final int DLV       = 65323;
+
 /** Next SECure, 3rd edition */
 public static final int NSEC3     = 65324;
 
@@ -241,6 +244,7 @@ static {
 	types.add(MAILB, "MAILB");
 	types.add(MAILA, "MAILA");
 	types.add(ANY, "ANY");
+    types.add(DLV, "DLV");
     types.add(NSEC3, "NSEC3");
 }
 
