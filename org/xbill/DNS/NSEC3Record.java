@@ -51,7 +51,7 @@ public class NSEC3Record extends Record
   public NSEC3Record(Name name, int dclass, long ttl, boolean AOFlag,
       byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
   {
-    super(name, Type.NSEC, dclass, ttl);
+    super(name, Type.NSEC3, dclass, ttl);
     this.AOFlag = AOFlag;
     this.hashAlg = hashAlg;
     this.iterations = iterations;
@@ -59,8 +59,11 @@ public class NSEC3Record extends Record
     this.salt = new byte[salt.length];
     System.arraycopy(salt, 0, this.salt, 0, salt.length);
 
-    this.next = new byte[next.length];
-    System.arraycopy(next, 0, this.next, 0, next.length);
+    if (next != null)
+    {
+      this.next = new byte[next.length];
+      System.arraycopy(next, 0, this.next, 0, next.length);
+    }
 
     for (int i = 0; i < types.length; i++)
     {
@@ -162,7 +165,7 @@ public class NSEC3Record extends Record
   String rrToString()
   {
     StringBuffer sb = new StringBuffer();
-    sb.append(AOFlag ? '0' : '1');
+    sb.append(AOFlag ? '1' : '0');
     sb.append(' ');
     sb.append(hashAlg);
     sb.append(' ');
@@ -190,7 +193,13 @@ public class NSEC3Record extends Record
   // after creating the record.
   public void setNext(byte[] next)
   {
-    this.next = next;
+    if (next == null)
+    {
+      this.next = null;
+      return;
+    }
+    this.next = new byte[next.length];
+    System.arraycopy(next, 0, this.next, 0, next.length);
   }
   
   public boolean getAuthoritativeOnlyFlag()

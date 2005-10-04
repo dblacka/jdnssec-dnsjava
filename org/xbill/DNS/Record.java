@@ -21,7 +21,7 @@ protected Name name;
 protected int type, dclass;
 protected long ttl;
 
-private static final Record [] knownRecords = new Record[256];
+private static final Record [] knownRecords = new Record[65535];
 private static final Record unknownRecord = new UNKRecord();
 private static final Class [] emptyClassArray = new Class[0];
 private static final Object [] emptyObjectArray = new Object[0];
