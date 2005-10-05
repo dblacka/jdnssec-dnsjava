@@ -31,6 +31,7 @@ public class NSEC3Record extends Record
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
+  private byte[]           owner; // cached numerical owner value.
   private int              types[];
 
   NSEC3Record()
@@ -183,6 +184,15 @@ public class NSEC3Record extends Record
     return sb.toString();
   }
 
+  public byte[] getOwner()
+  {
+    if (owner == null)
+    {
+      owner = base32.fromString(getName().getLabelString(0));
+    }
+    return owner;
+  }
+  
   /** Returns the next hash */
   public byte[] getNext()
   {
