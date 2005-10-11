@@ -57,8 +57,11 @@ public class NSEC3Record extends Record
     this.hashAlg = hashAlg;
     this.iterations = iterations;
 
-    this.salt = new byte[salt.length];
-    System.arraycopy(salt, 0, this.salt, 0, salt.length);
+    if (salt != null)
+    {
+      this.salt = new byte[salt.length];
+      System.arraycopy(salt, 0, this.salt, 0, salt.length);
+    }
 
     if (next != null)
     {
