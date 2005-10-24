@@ -26,12 +26,12 @@ public class NSEC3Record extends Record
 {
   public static final byte SHA1_DIGEST_ID = 1;
 
-  private boolean          AOFlag;
+  private boolean          optInFlag;
   private byte             hashAlg;
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
-  private byte[]           owner; // cached numerical owner value.
+  private byte[]           owner;             // cached numerical owner value.
   private int              types[];
 
   NSEC3Record()
@@ -49,11 +49,11 @@ public class NSEC3Record extends Record
    * @param next The following name in an ordered list of the zone
    * @param types An array containing the types present.
    */
-  public NSEC3Record(Name name, int dclass, long ttl, boolean AOFlag,
+  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag,
       byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
   {
     super(name, Type.NSEC3, dclass, ttl);
-    this.AOFlag = AOFlag;
+    this.optInFlag = optInFlag;
     this.hashAlg = hashAlg;
     this.iterations = iterations;
 
@@ -92,16 +92,27 @@ public class NSEC3Record extends Record
   void rrFromWire(DNSInput in) throws IOException
   {
     int first = in.readU8();
-    AOFlag = (first & 0x80) != 0;
+    optInFlag = (first & 0x80) != 0;
     hashAlg = (byte) (first & 0x7F);
     iterations = in.readU8() << 24 | in.readU16();
 
     int salt_length = in.readU8();
     salt = in.readByteArray(salt_length);
 
-    int next_len = 20; // FIXME: should figure this out from the hashAlg.
+    int next_len;
+   
+    switch (hashAlg)
+    {
+      case SHA1_DIGEST_ID :
+        next_len = 20;
+        break;
+      default :
+        throw new IOException("unknown NSEC3 digest algorithm: " + hashAlg);
+    }
+
     next = in.readByteArray(next_len);
 
+    // Read typemap.
     int lastbase = -1;
     List list = new ArrayList();
     while (in.remaining() > 0)
@@ -131,12 +142,12 @@ public class NSEC3Record extends Record
 
   void rdataFromString(Tokenizer st, Name origin) throws IOException
   {
-    int aoflag = st.getUInt8();
-    AOFlag = (aoflag != 0);
+    int oflag = st.getUInt8();
+    optInFlag = (oflag != 0);
     hashAlg = (byte) st.getUInt8(); // FIXME: check this for validity.
     iterations = (int) st.getUInt32();
     String salt_hex = st.getString();
-    if (salt_hex.equals("0") || salt_hex.equals("00"))
+    if (salt_hex.equals("-") || salt_hex.equals("0") || salt_hex.equals("00"))
     {
       salt = null;
     }
@@ -169,13 +180,13 @@ public class NSEC3Record extends Record
   String rrToString()
   {
     StringBuffer sb = new StringBuffer();
-    sb.append(AOFlag ? '1' : '0');
+    sb.append(optInFlag ? '1' : '0');
     sb.append(' ');
     sb.append(hashAlg);
     sb.append(' ');
     sb.append(iterations);
     sb.append(' ');
-    sb.append(salt == null ? "0" : base16.toString(salt));
+    sb.append(salt == null ? "-" : base16.toString(salt));
     sb.append(' ');
     sb.append(base32.toString(next).toLowerCase());
 
@@ -195,14 +206,14 @@ public class NSEC3Record extends Record
     }
     return owner;
   }
-  
+
   /** Returns the next hash */
   public byte[] getNext()
   {
     return next;
   }
 
-  /** Set the next field.*/
+  /** Set the next field. */
   // Note: it is typical for implementations to have to set the 'next' field
   // after creating the record.
   public void setNext(byte[] next)
@@ -215,10 +226,10 @@ public class NSEC3Record extends Record
     this.next = new byte[next.length];
     System.arraycopy(next, 0, this.next, 0, next.length);
   }
-  
-  public boolean getAuthoritativeOnlyFlag()
+
+  public boolean getOptInFlag()
   {
-    return AOFlag;
+    return optInFlag;
   }
 
   public byte getHashAlgorithm()
@@ -271,7 +282,7 @@ public class NSEC3Record extends Record
 
   void rrToWire(DNSOutput out, Compression c, boolean canonical)
   {
-    out.writeU8((AOFlag ? 0x80 : 0) | (hashAlg & 0x7F));
+    out.writeU8((optInFlag ? 0x80 : 0) | (hashAlg & 0x7F));
     out.writeU8((iterations >> 16) & 0xFF);
     out.writeU16(iterations & 0xFFFF);
     out.writeU8(salt == null ? 0 : salt.length);
@@ -309,7 +320,7 @@ public class NSEC3Record extends Record
         throw new NoSuchAlgorithmException(
             "Unknown NSEC3 algorithm identifier: " + hash_algorithm);
     }
-    
+
     // Construct our wire form.
     byte[] wire_name = n.toWireCanonical();
     byte[] res = wire_name; // for the first iteration.
@@ -325,7 +336,7 @@ public class NSEC3Record extends Record
       }
       res = md.digest(res);
     }
-    
+
     return res;
   }
 }

@@ -15,12 +15,30 @@ import java.util.Arrays;
 public class base32
 {
 
-  private static final String Base32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
+  // This is alphabet described by RFC 3548
+  private static final String Base32_3548 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  // This is the alphabet describted by RFC 2932
+  private static final String Base32_2932 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+  
+  // This is the alphabet that will be used by default.
+  private static String Base32 = Base32_2932;
+  
   private base32()
   {
   }
 
+  public static void setBase32Alphabet(boolean useRfc3548)
+  {
+    if (useRfc3548)
+    {
+      Base32 = Base32_3548;
+    }
+    else
+    {
+      Base32 = Base32_2932;
+    }
+  }
+  
   /**
    * Convert binary data to a base32-encoded String
    * 
