@@ -98,6 +98,7 @@
       <path id="tests_classpath">
 	<path location="${basedir}"/>
 	<path location="${tests_dir}"/>
+        <path location="${build_dir}"/>
       </path>
       <antcall target="_run_tests">
 	<param name="classpath_name" value="tests_classpath"/>

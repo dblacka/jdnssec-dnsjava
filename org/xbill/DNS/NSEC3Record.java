@@ -2,10 +2,12 @@
 
 package org.xbill.DNS;
 
-import java.io.*;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.xbill.DNS.utils.base16;
 import org.xbill.DNS.utils.base32;
@@ -44,10 +46,18 @@ public class NSEC3Record extends Record
   }
 
   /**
-   * Creates an NSEC Record from the given data.
+   * Creates an NSEC3 record from the given data.
    * 
-   * @param next The following name in an ordered list of the zone
-   * @param types An array containing the types present.
+   * @param name The ownername of the NSEC3 record (base32'd hash plus
+   *          zonename).
+   * @param dclass The class.
+   * @param ttl The TTL.
+   * @param optInFlag The value of the "O" flag.
+   * @param hashAlg The hash algorithm.
+   * @param iterations The number of hash iterations.
+   * @param salt The salt to use (may be null).
+   * @param next The next hash (may not be null).
+   * @param types The types present at the original ownername.
    */
   public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag,
       byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
@@ -57,17 +67,17 @@ public class NSEC3Record extends Record
     this.hashAlg = hashAlg;
     this.iterations = iterations;
 
+    if (this.iterations < 0 || this.iterations >= 16777216)
+      throw new IllegalArgumentException("Invalid iterations value");
+
     if (salt != null)
     {
       this.salt = new byte[salt.length];
       System.arraycopy(salt, 0, this.salt, 0, salt.length);
     }
 
-    if (next != null)
-    {
-      this.next = new byte[next.length];
-      System.arraycopy(next, 0, this.next, 0, next.length);
-    }
+    this.next = new byte[next.length];
+    System.arraycopy(next, 0, this.next, 0, next.length);
 
     for (int i = 0; i < types.length; i++)
     {
@@ -89,6 +99,17 @@ public class NSEC3Record extends Record
     return array;
   }
 
+  private int hashLength(int hashAlg)
+  {
+    switch (hashAlg)
+    {
+      case SHA1_DIGEST_ID :
+        return 20;
+      default :
+        return -1;
+    }
+  }
+
   void rrFromWire(DNSInput in) throws IOException
   {
     int first = in.readU8();
@@ -97,17 +118,16 @@ public class NSEC3Record extends Record
     iterations = in.readU8() << 24 | in.readU16();
 
     int salt_length = in.readU8();
-    salt = in.readByteArray(salt_length);
+    if (salt_length > 0)
+      salt = in.readByteArray(salt_length);
+    else
+      salt = null;
 
-    int next_len;
-   
-    switch (hashAlg)
+    int next_len = hashLength(hashAlg);
+    if (next_len < 0)
     {
-      case SHA1_DIGEST_ID :
-        next_len = 20;
-        break;
-      default :
-        throw new IOException("unknown NSEC3 digest algorithm: " + hashAlg);
+      throw new WireParseException("Unrecognized NSEC3 hash algorithm"
+          + hashAlg);
     }
 
     next = in.readByteArray(next_len);
@@ -144,7 +164,11 @@ public class NSEC3Record extends Record
   {
     int oflag = st.getUInt8();
     optInFlag = (oflag != 0);
-    hashAlg = (byte) st.getUInt8(); // FIXME: check this for validity.
+    hashAlg = (byte) st.getUInt8();
+    if (hashLength(hashAlg) < 0)
+    {
+      throw st.exception("Unrecognized NSEC3 hash algorithm: " + hashAlg);
+    }
     iterations = (int) st.getUInt32();
     String salt_hex = st.getString();
     if (salt_hex.equals("-") || salt_hex.equals("0") || salt_hex.equals("00"))
@@ -211,20 +235,6 @@ public class NSEC3Record extends Record
   public byte[] getNext()
   {
     return next;
-  }
-
-  /** Set the next field. */
-  // Note: it is typical for implementations to have to set the 'next' field
-  // after creating the record.
-  public void setNext(byte[] next)
-  {
-    if (next == null)
-    {
-      this.next = null;
-      return;
-    }
-    this.next = new byte[next.length];
-    System.arraycopy(next, 0, this.next, 0, next.length);
   }
 
   public boolean getOptInFlag()
@@ -306,6 +316,16 @@ public class NSEC3Record extends Record
     mapToWire(out, types, mapbase, mapstart, types.length);
   }
 
+  /**
+   * Calculate an NSEC3 hash based on a DNS name and NSEC3 hash parameters.
+   * 
+   * @param n The name to hash.
+   * @param hash_algorithm The hash algorithm to use.
+   * @param iterations The number of iterations to do.
+   * @param salt The salt to use.
+   * @return The calculated hash as a byte array.
+   * @throws NoSuchAlgorithmException If the hash algorithm is unrecognized.
+   */
   public static byte[] hash(Name n, byte hash_algorithm, int iterations,
       byte[] salt) throws NoSuchAlgorithmException
   {
