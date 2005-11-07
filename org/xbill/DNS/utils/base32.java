@@ -52,13 +52,13 @@ public class base32
     // each 40-bits (5 bytes) translates into 8 base32 characters.
 
     byte[] s = new byte[5];
-    int[] t = new int[8];
+    byte[] t = new byte[8];
     int j, k, nblocks, block_len, padding;
 
     nblocks = (b.length + 4) / 5;
     
     // for each block (including the last, incomplete block)
-    for (int i = 0; i < (b.length + 4) / 5; i++)
+    for (int i = 0; i <  nblocks; i++)
     {
       // clear the array if we are in the last block.
       if (i == nblocks-1) Arrays.fill(s, (byte) 0);
@@ -77,21 +77,21 @@ public class base32
       // convert the 5 byte block into 8 characters (values 0-31).
 
       // upper 5 bits from first byte
-      t[0] = (s[0] >> 3) & 0x1F;
+      t[0] = (byte) ((s[0] >> 3) & 0x1F);
       // lower 3 bits from 1st byte, upper 2 bits from 2nd.
-      t[1] = ((s[0] & 0x07) << 2) | ((s[1] >> 6) & 0x03);
+      t[1] = (byte) (((s[0] & 0x07) << 2) | ((s[1] >> 6) & 0x03));
       // bits 5-1 from 2nd.
-      t[2] = (s[1] >> 1) & 0x1F;
+      t[2] = (byte) ((s[1] >> 1) & 0x1F);
       // lower 1 bit from 2nd, upper 4 from 3rd
-      t[3] = ((s[1] & 0x01) << 4) | ((s[2] >> 4) & 0x0F);
+      t[3] = (byte) (((s[1] & 0x01) << 4) | ((s[2] >> 4) & 0x0F));
       // lower 4 from 3rd, upper 1 from 4th.
-      t[4] = ((s[2] & 0x0F) << 1) | ((s[3] >> 7) & 0x01);
+      t[4] = (byte) (((s[2] & 0x0F) << 1) | ((s[3] >> 7) & 0x01));
       // bits 6-2 from 4th
-      t[5] = (s[3] >> 2) & 0x1F;
+      t[5] = (byte) ((s[3] >> 2) & 0x1F);
       // lower 2 from 4th, upper 3 from 5th;
-      t[6] = (s[3] & 0x03 << 3) | ((s[4] >> 5) & 0x07);
+      t[6] = (byte) (((s[3] & 0x03) << 3) | ((s[4] >> 5) & 0x07));
       // lower 5 from 5th;
-      t[7] = s[4] & 0x1F;
+      t[7] = (byte) (s[4] & 0x1F);
 
       // write out the actual characters.
       for (int n = 0; n < t.length - padding; n++)
@@ -269,7 +269,8 @@ public class base32
         System.out.print("byte[] exp = { ");
         for (int i = 0; i < out.length; i++)
         {
-          System.out.print(out[i] + ", ");
+          int n = out[i] & 0xFF;
+          System.out.print(n + ", ");
         }
         System.out.println("};");
         System.exit(0);
@@ -279,7 +280,7 @@ public class base32
       byte[] in = new byte[args.length];
       for (int i = 0; i < args.length; i++)
       {
-        in[i] = Byte.parseByte(args[i]);
+        in[i] = (byte) (Integer.parseInt(args[i]) & 0xFF);
       }
       
       String s = toString(in);
