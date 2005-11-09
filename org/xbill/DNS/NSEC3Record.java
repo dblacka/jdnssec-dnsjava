@@ -35,6 +35,7 @@ public class NSEC3Record extends Record
   private byte[]           next;
   private byte[]           owner;             // cached numerical owner value.
   private int              types[];
+  private String           comment; // Optional commentì
 
   NSEC3Record()
   {
@@ -88,6 +89,13 @@ public class NSEC3Record extends Record
     Arrays.sort(this.types);
   }
 
+  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag, byte hashAlg,
+      int iterations, byte[] salt, byte[] next, int[] types, String comment)
+  {
+    this(name, dclass, ttl, optInFlag, hashAlg, iterations, salt, next, types);
+    this.comment = comment;
+  }
+  
   private int[] listToArray(List list)
   {
     int size = list.size();
@@ -219,6 +227,12 @@ public class NSEC3Record extends Record
       sb.append(" ");
       sb.append(Type.string(types[i]));
     }
+    if (comment != null)
+    {
+      sb.append(" ; ");
+      sb.append(comment);
+    }
+    
     return sb.toString();
   }
 
