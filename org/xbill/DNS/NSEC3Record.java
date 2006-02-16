@@ -310,9 +310,9 @@ public class NSEC3Record extends Record
   void rrToWire(DNSOutput out, Compression c, boolean canonical)
   {
     out.writeU8(hashAlg);
-    byte iter_msb = (byte) ((iterations >> 16) & 0x7F);
+    int iter_msb = (byte) ((iterations >> 16) & 0x7F);
     iter_msb |= (optInFlag ? 0x80 : 0x00);
-    out.writeU8(iter_msb);
+    out.writeU8(iter_msb & 0xFF);
     out.writeU16(iterations & 0xFFFF);
     out.writeU8(salt == null ? 0 : salt.length);
     if (salt != null) out.writeByteArray(salt);
