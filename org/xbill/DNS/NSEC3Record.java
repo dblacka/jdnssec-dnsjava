@@ -33,7 +33,7 @@ public class NSEC3Record extends Record
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
-  private byte[]           owner;             // cached numerical owner value.
+  private byte[]           owner;   // cached numerical owner value.
   private int              types[];
   private String           comment; // Optional commentì
 
@@ -73,6 +73,8 @@ public class NSEC3Record extends Record
 
     if (salt != null)
     {
+      if (salt.length > 255)
+        throw new IllegalArgumentException("Invalid salt length");
       this.salt = new byte[salt.length];
       System.arraycopy(salt, 0, this.salt, 0, salt.length);
     }
@@ -120,10 +122,11 @@ public class NSEC3Record extends Record
 
   void rrFromWire(DNSInput in) throws IOException
   {
-    int first = in.readU8();
-    optInFlag = (first & 0x80) != 0;
-    hashAlg = (byte) (first & 0x7F);
-    iterations = in.readU8() << 24 | in.readU16();
+    hashAlg = (byte) in.readU8();
+    byte iter_msb = (byte) in.readU8();
+    optInFlag = (iter_msb & 0x80) > 0;
+    iter_msb &= 0x7F;
+    iterations = iter_msb << 24 | in.readU16();
 
     int salt_length = in.readU8();
     if (salt_length > 0)
@@ -306,8 +309,10 @@ public class NSEC3Record extends Record
 
   void rrToWire(DNSOutput out, Compression c, boolean canonical)
   {
-    out.writeU8((optInFlag ? 0x80 : 0) | (hashAlg & 0x7F));
-    out.writeU8((iterations >> 16) & 0xFF);
+    out.writeU8(hashAlg);
+    byte iter_msb = (byte) ((iterations >> 16) & 0x7F);
+    iter_msb |= (optInFlag ? 0x80 : 0x00);
+    out.writeU8(iter_msb);
     out.writeU16(iterations & 0xFFFF);
     out.writeU8(salt == null ? 0 : salt.length);
     if (salt != null) out.writeByteArray(salt);
@@ -347,7 +352,7 @@ public class NSEC3Record extends Record
 
     switch (hash_algorithm)
     {
-      case 1 :
+      case SHA1_DIGEST_ID :
         md = MessageDigest.getInstance("SHA1");
         break;
       default :
