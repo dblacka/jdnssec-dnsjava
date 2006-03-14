@@ -33,9 +33,9 @@ public class NSEC3Record extends Record
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
-  private byte[]           owner;   // cached numerical owner value.
+  private byte[]           owner;             // cached numerical owner value.
   private int              types[];
-  private String           comment; // Optional commentì
+  private String           comment;           // Optional commentì
 
   NSEC3Record()
   {
@@ -91,13 +91,14 @@ public class NSEC3Record extends Record
     Arrays.sort(this.types);
   }
 
-  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag, byte hashAlg,
-      int iterations, byte[] salt, byte[] next, int[] types, String comment)
+  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag,
+      byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types,
+      String comment)
   {
     this(name, dclass, ttl, optInFlag, hashAlg, iterations, salt, next, types);
     this.comment = comment;
   }
-  
+
   private int[] listToArray(List list)
   {
     int size = list.size();
@@ -175,7 +176,24 @@ public class NSEC3Record extends Record
   {
     int oflag = st.getUInt8();
     optInFlag = (oflag != 0);
-    hashAlg = (byte) st.getUInt8();
+    // Note that the hash alg can either be a number or a mnemonic
+    String hashAlgStr = st.getString();
+    if (Character.isDigit(hashAlgStr.charAt(0)))
+    {
+      try
+      {
+        hashAlg = (byte) Long.parseLong(hashAlgStr);
+      }
+      catch (NumberFormatException e)
+      {
+        throw new IOException("expected an integer");
+      }
+    }
+    else
+    {
+      hashAlg = mnemonicToAlg(hashAlgStr);
+    }
+
     if (hashLength(hashAlg) < 0)
     {
       throw st.exception("Unrecognized NSEC3 hash algorithm: " + hashAlg);
@@ -235,7 +253,7 @@ public class NSEC3Record extends Record
       sb.append(" ; ");
       sb.append(comment);
     }
-    
+
     return sb.toString();
   }
 
@@ -377,5 +395,29 @@ public class NSEC3Record extends Record
     }
 
     return res;
+  }
+
+  public static byte mnemonicToAlg(String mnemonic) throws IOException
+  {
+    // FIXME: this should probably use a table.
+
+    if (mnemonic.equalsIgnoreCase("SHA1")
+        || mnemonic.equalsIgnoreCase("SHA-1"))
+    {
+      return SHA1_DIGEST_ID;
+    }
+
+    throw new IOException("unknown hash algorithm");
+  }
+
+  public static String algToMnemonic(byte hashAlg)
+  {
+    switch (hashAlg)
+    {
+      case SHA1_DIGEST_ID :
+        return "SHA-1";
+      default :
+        return Byte.toString(hashAlg);
+    }
   }
 }
