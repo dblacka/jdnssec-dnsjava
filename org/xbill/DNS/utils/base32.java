@@ -19,10 +19,13 @@ public class base32
   private static final String Base32_3548 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   // This is the alphabet describted by RFC 2932
   private static final String Base32_2932 = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-  
+
   // This is the alphabet that will be used by default.
-  private static String Base32 = Base32_2932;
-  
+  private static String       Base32      = Base32_2932;
+
+  // An option to pad string output with '=' characters or not.
+  private static boolean      usePadding  = true;
+
   private base32()
   {
   }
@@ -38,7 +41,12 @@ public class base32
       Base32 = Base32_2932;
     }
   }
+  public static void usePadding(boolean val)
+  {
+    usePadding = val;
+  }
   
+
   /**
    * Convert binary data to a base32-encoded String
    * 
@@ -56,13 +64,13 @@ public class base32
     int j, k, nblocks, block_len, padding;
 
     nblocks = (b.length + 4) / 5;
-    
+
     // for each block (including the last, incomplete block)
-    for (int i = 0; i <  nblocks; i++)
+    for (int i = 0; i < nblocks; i++)
     {
       // clear the array if we are in the last block.
-      if (i == nblocks-1) Arrays.fill(s, (byte) 0);
-      
+      if (i == nblocks - 1) Arrays.fill(s, (byte) 0);
+
       // copy the current block into our staging area. This allows us to
       // always work with a 5 byte block, even on the last block
       for (j = i * 5, k = 0; k < s.length && j < b.length; k++, j++)
@@ -97,8 +105,11 @@ public class base32
       for (int n = 0; n < t.length - padding; n++)
         os.write(Base32.charAt(t[n]));
       // write out the padding (if any)
-      for (int n = t.length - padding; n < t.length; n++)
-        os.write('=');
+      if (usePadding)
+      {
+        for (int n = t.length - padding; n < t.length; n++)
+          os.write('=');
+      }
     }
 
     return new String(os.toByteArray());
@@ -210,10 +221,10 @@ public class base32
 
     short[] s = new short[8];
     int[] t = new int[5];
-    int j, k, nblocks, block_len, padding; 
-    
+    int j, k, nblocks, block_len, padding;
+
     nblocks = (in.length + 7) / 8;
-    
+
     for (int i = 0; i < nblocks; i++)
     {
       if (i == nblocks - 1) Arrays.fill(s, (short) 0);
@@ -235,7 +246,7 @@ public class base32
       padding = (k != s.length) ? 8 - k : padding;
       block_len = paddingToBlockLen(padding);
       if (block_len < 0) return null; // invalid base32 length
-      
+
       // all 5 bits of 1st, high 3 (of 5) of 2nd
       t[0] = (s[0] << 3) | s[1] >> 2;
       // lower 2 of 2nd, all 5 of 3rd, high 1 of 4th
@@ -275,14 +286,14 @@ public class base32
         System.out.println("};");
         System.exit(0);
       }
-      
+
       // convert arguments into a byte array.
       byte[] in = new byte[args.length];
       for (int i = 0; i < args.length; i++)
       {
         in[i] = (byte) (Integer.parseInt(args[i]) & 0xFF);
       }
-      
+
       String s = toString(in);
       System.out.println("base 32: " + s);
     }

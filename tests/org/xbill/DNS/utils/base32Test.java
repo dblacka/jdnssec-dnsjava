@@ -53,27 +53,40 @@ public class base32Test extends TestCase
 
   public void test_toString_basic1()
   {
+    base32.usePadding(true);
     byte[] data = {0};
     String out = base32.toString(data);
     assertEquals("00======", out);
+    base32.usePadding(false);
+    out = base32.toString(data);
+    assertEquals("00", out);
   }
 
   public void test_toString_basic2()
   {
+    base32.usePadding(true);
     byte[] data = {0, 0};
     String out = base32.toString(data);
     assertEquals("0000====", out);
+    base32.usePadding(false);
+    out = base32.toString(data);
+    assertEquals("0000", out);
   }
 
   public void test_toString_basic3()
   {
+    base32.usePadding(true);    
     byte[] data = {0, 0, 1};
     String out = base32.toString(data);
     assertEquals("00002===", out);
+    base32.usePadding(false);
+    out = base32.toString(data);
+    assertEquals("00002", out);
   }
 
   public void test_toString_basic4()
   {
+    base32.usePadding(true);
     byte[] data = {(byte) 0xFC, 0, 0};
     String out = base32.toString(data);
     assertEquals("VG000===", out);
@@ -81,6 +94,7 @@ public class base32Test extends TestCase
 
   public void test_toString_basic5()
   {
+    base32.usePadding(true);
     byte[] data = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
     String out = base32.toString(data);
     assertEquals("VVVVU===", out);
@@ -88,6 +102,7 @@ public class base32Test extends TestCase
 
   public void test_toString_basic6()
   {
+    base32.usePadding(true);
     byte[] data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     String out = base32.toString(data);
     assertEquals("041061050O3GG28=", out);
@@ -101,6 +116,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_shorter()
   {
+    base32.usePadding(true);        
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 17, "", false);
     assertEquals("041061050O3GG28=", out);
@@ -108,6 +124,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_sameLength()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 16, "", false);
     assertEquals("041061050O3GG28=", out);
@@ -115,6 +132,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_oneBreak()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 14, "", false);
     assertEquals("041061050O3GG2\n8=", out);
@@ -122,27 +140,40 @@ public class base32Test extends TestCase
 
   public void test_formatString_twoBreaks1()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 7, "", false);
     assertEquals("0410610\n50O3GG2\n8=", out);
+    base32.usePadding(false);
+    out = base32.formatString(in, 7, "", false);
+    assertEquals("0410610\n50O3GG2\n8", out);
   }
 
   public void test_formatString_twoBreaks2()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 6, "", false);
     assertEquals("041061\n050O3G\nG28=", out);
+    base32.usePadding(false);
+    out = base32.formatString(in, 6, "", false);
+    assertEquals("041061\n050O3G\nG28", out);
   }
 
   public void test_formatString_shorterWithPrefix()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28="(16 chars)
     String out = base32.formatString(in, 16, "!_", false);
     assertEquals("!_041061050O3GG28=", out);
+    base32.usePadding(false);
+    out = base32.formatString(in, 16, "!_", false);
+    assertEquals("!_041061050O3GG28", out);
   }
 
   public void test_formatString_sameLengthWithPrefix()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 16, "!_", false);
     assertEquals("!_041061050O3GG28=", out);
@@ -150,6 +181,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_oneBreakWithPrefix()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 10, "!_", false);
     assertEquals("!_041061050O\n!_3GG28=", out);
@@ -157,6 +189,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_twoBreaks1WithPrefix()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 7, "!_", false);
     assertEquals("!_0410610\n!_50O3GG2\n!_8=", out);
@@ -164,6 +197,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_twoBreaks2WithPrefix()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 6, "!_", false);
     assertEquals("!_041061\n!_050O3G\n!_G28=", out);
@@ -171,6 +205,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_shorterWithPrefixAndClose()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 17, "!_", true);
     assertEquals("!_041061050O3GG28= )", out);
@@ -178,6 +213,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_sameLengthWithPrefixAndClose()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 16, "!_", true);
     assertEquals("!_041061050O3GG28= )", out);
@@ -185,6 +221,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_oneBreakWithPrefixAndClose()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 10, "!_", true);
     assertEquals("!_041061050O\n!_3GG28= )", out);
@@ -192,6 +229,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_twoBreaks1WithPrefixAndClose()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 7, "!_", true);
     assertEquals("!_0410610\n!_50O3GG2\n!_8= )", out);
@@ -199,6 +237,7 @@ public class base32Test extends TestCase
 
   public void test_formatString_twoBreaks2WithPrefixAndClose()
   {
+    base32.usePadding(true);    
     byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
     String out = base32.formatString(in, 6, "!_", true);
     assertEquals("!_041061\n!_050O3G\n!_G28= )", out);
