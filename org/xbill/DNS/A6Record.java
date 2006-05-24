@@ -63,11 +63,13 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
 	if (prefixBits > 128) {
 		throw st.exception("prefix bits must be [0..128]");
 	} else if (prefixBits < 128) {
-		byte [] bytes = Address.toByteArray(st.getString(),
-						    Address.IPv6);
-		if (bytes == null)
-			throw st.exception("invalid IPv6 address");
-		suffix = InetAddress.getByAddress(bytes);
+		String s = st.getString();
+		try {
+			suffix = Address.getByAddress(s, Address.IPv6);
+		}
+		catch (UnknownHostException e) {
+			throw st.exception("invalid IPv6 address: " + s);
+		}
 	}
 	if (prefixBits > 0)
 		prefix = st.getName(origin);

@@ -6,12 +6,10 @@
     <property name="tests_dir" value="${basedir}/tests"/>
     <property name="tests_build_dir" value="${basedir}/build/tests"/>
     <property name="reports_dir" value="${basedir}/reports"/>
-    <property name="version" value="2.0.0-vrsn-2"/>
+    <property name="version" value="2.0.1-vrsn-1"/>
     <property name="jarname" value="dnsjava-${version}.jar"/>
     <property name="zipname" value="dnsjava-${version}.zip"/>
     <property name="targzname" value="dnsjava-${version}.tar.gz"/>
-
-    <property name="testcase" value="org.xbill.DNS.utils.base32Test" />
 
     <property name="j2se.javadoc"
       value="http://java.sun.com/j2se/1.4/docs/api/"/>
@@ -41,7 +39,7 @@
 
     <target name="jar" description="Makes dnsjava.jar" depends="compile">
 	<jar jarfile="${dist_dir}/${jarname}"
-	     basedir="${build_dir}" includes="**/*.class">
+		basedir="${build_dir}" includes="**/*.class **/*.properties">
 	    <exclude name="org/xbill/DNS/tests/*.class"/>
 	    <exclude name="tests/**"/>
 	    <manifest>

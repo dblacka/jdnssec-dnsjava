@@ -23,15 +23,17 @@ public class SimpleResolver implements Resolver {
 /** The default port to send queries to */
 public static final int DEFAULT_PORT = 53;
 
-private InetAddress addr;
-private int port = DEFAULT_PORT;
+/** The default EDNS payload size */
+public static final int DEFAULT_EDNS_PAYLOADSIZE = 1280;
+
+private InetSocketAddress address;
+private InetSocketAddress localAddress;
 private boolean useTCP, ignoreTruncation;
-private byte EDNSlevel = -1;
+private OPTRecord queryOPT;
 private TSIG tsig;
 private int timeoutValue = 10 * 1000;
 
 private static final short DEFAULT_UDPSIZE = 512;
-private static final short EDNS_UDPSIZE = 1280;
 
 private static String defaultResolver = "localhost";
 private static int uniqueID = 0;
@@ -48,10 +50,12 @@ SimpleResolver(String hostname) throws UnknownHostException {
 		if (hostname == null)
 			hostname = defaultResolver;
 	}
+	InetAddress addr;
 	if (hostname.equals("0"))
 		addr = InetAddress.getLocalHost();
 	else
 		addr = InetAddress.getByName(hostname);
+	address = new InetSocketAddress(addr, DEFAULT_PORT);
 }
 
 /**
@@ -67,7 +71,7 @@ SimpleResolver() throws UnknownHostException {
 
 InetSocketAddress
 getAddress() {
-	return new InetSocketAddress(addr, port);
+	return address;
 }
 
 /** Sets the default host (initially localhost) to query */
@@ -78,7 +82,45 @@ setDefaultResolver(String hostname) {
 
 public void
 setPort(int port) {
-	this.port = port;
+	address = new InetSocketAddress(address.getAddress(), port);
+}
+
+/**
+ * Sets the address of the server to communicate with.
+ * @param addr The address of the DNS server
+ */
+public void
+setAddress(InetSocketAddress addr) {
+	address = addr;
+}
+
+/**
+ * Sets the address of the server to communicate with (on the default
+ * DNS port)
+ * @param addr The address of the DNS server
+ */
+public void
+setAddress(InetAddress addr) {
+	address = new InetSocketAddress(addr, address.getPort());
+}
+
+/**
+ * Sets the local address to bind to when sending messages.
+ * @param addr The local address to send messages from.
+ */
+public void
+setLocalAddress(InetSocketAddress addr) {
+	localAddress = addr;
+}
+
+/**
+ * Sets the local address to bind to when sending messages.  A random port
+ * will be used.
+ * @param addr The local address to send messages from.
+ */
+public void
+setLocalAddress(InetAddress addr) {
+	localAddress = new InetSocketAddress(addr, 0);
 }
 
 public void
@@ -92,11 +134,18 @@ setIgnoreTruncation(boolean flag) {
 }
 
 public void
-setEDNS(int level) {
+setEDNS(int level, int payloadSize, int flags, List options) {
 	if (level != 0 && level != -1)
-		throw new UnsupportedOperationException("invalid EDNS level " +
-							"- must be 0 or -1");
-	this.EDNSlevel = (byte) level;
+		throw new IllegalArgumentException("invalid EDNS level - " +
+						   "must be 0 or -1");
+	if (payloadSize == 0)
+		payloadSize = DEFAULT_EDNS_PAYLOADSIZE;
+	queryOPT = new OPTRecord(payloadSize, 0, level, flags, options);
+}
+
+public void
+setEDNS(int level) {
+	setEDNS(level, 0, 0, null);
 }
 
 public void
@@ -158,10 +207,9 @@ verifyTSIG(Message query, Message response, byte [] b, TSIG tsig) {
 
 private void
 applyEDNS(Message query) {
-	if (EDNSlevel < 0 || query.getOPT() != null)
+	if (queryOPT == null || query.getOPT() != null)
 		return;
-	OPTRecord opt = new OPTRecord(EDNS_UDPSIZE, Rcode.NOERROR, (byte)0);
-	query.addRecord(opt, Section.ADDITIONAL);
+	query.addRecord(queryOPT, Section.ADDITIONAL);
 }
 
 private int
@@ -183,8 +231,9 @@ maxUDPSize(Message query) {
 public Message
 send(Message query) throws IOException {
 	if (Options.check("verbose"))
-		System.err.println("Sending to " + addr.getHostAddress() +
-				   ":" + port);
+		System.err.println("Sending to " +
+				   address.getAddress().getHostAddress() +
+				   ":" + address.getPort());
 
 	if (query.getHeader().getOpcode() == Opcode.QUERY) {
 		Record question = query.getQuestion();
@@ -200,7 +249,6 @@ send(Message query) throws IOException {
 	byte [] out = query.toWire(Message.MAXLENGTH);
 	int udpSize = maxUDPSize(query);
 	boolean tcp = false;
-	SocketAddress sa = new InetSocketAddress(addr, port);
 	long endTime = System.currentTimeMillis() + timeoutValue;
 	do {
 		byte [] in;
@@ -208,9 +256,11 @@ send(Message query) throws IOException {
 		if (useTCP || out.length > udpSize)
 			tcp = true;
 		if (tcp)
-			in = TCPClient.sendrecv(sa, out, endTime);
+			in = TCPClient.sendrecv(localAddress, address, out,
+						endTime);
 		else
-			in = UDPClient.sendrecv(sa, out, udpSize, endTime);
+			in = UDPClient.sendrecv(localAddress, address, out,
+						udpSize, endTime);
 
 		/*
 		 * Check that the response is long enough.
@@ -283,8 +333,8 @@ sendAsync(final Message query, final ResolverListener listener) {
 private Message
 sendAXFR(Message query) throws IOException {
 	Name qname = query.getQuestion().getName();
-	SocketAddress sockaddr = new InetSocketAddress(addr, port);
-	ZoneTransferIn xfrin = ZoneTransferIn.newAXFR(qname, sockaddr, tsig);
+	ZoneTransferIn xfrin = ZoneTransferIn.newAXFR(qname, address, tsig);
+	xfrin.setTimeout(getTimeout());
 	try {
 		xfrin.run();
 	}

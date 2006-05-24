@@ -3,17 +3,31 @@
 package org.xbill.DNS;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
  * A class that tries to locate name servers and the search path to
- * be appended to unqualified names.  Currently, this works if either the
- * appropriate properties are set, the OS has a unix-like /etc/resolv.conf,
- * or the system is Windows based with ipconfig or winipcfg.  These routines
- * will be called internally by the Lookup class, and can also be called
+ * be appended to unqualified names.
+ *
+ * The following are attempted, in order, until one succeeds.
+ * <UL>
+ *   <LI>The properties 'dns.server' and 'dns.search' (comma delimited lists)
+ *       are checked.  The servers can either be IP addresses or hostnames
+ *       (which are resolved using Java's built in DNS support).
+ *   <LI>The sun.net.dns.ResolverConfiguration class is queried.
+ *   <LI>On Unix, /etc/resolv.conf is parsed.
+ *   <LI>On Windows, ipconfig/winipcfg is called and its output parsed.  This
+ *       may fail for non-English versions on Windows.
+ *   <LI>"localhost" is used as the nameserver, and the search path is empty.
+ * </UL>
+ *
+ * These routines will be called internally when creating Resolvers/Lookups
+ * without explicitly specifying server names, and can also be called
  * directly if desired.
  *
  * @author Brian Wellington
+ * @author <a href="mailto:yannick@meudal.net">Yannick Meudal</a>
  */
 
 public class ResolverConfig {
@@ -29,7 +43,10 @@ static {
 
 public
 ResolverConfig() {
-	findProperty();
+	if (findProperty())
+		return;
+	if (findSunJVM())
+		return;
 	if (servers == null || searchlist == null) {
 		String OS = System.getProperty("os.name");
 		if (OS.indexOf("Windows") != -1) {
@@ -71,36 +88,92 @@ addSearch(String search, List list) {
 	list.add(name);
 }
 
+private void
+configureFromLists(List lserver, List lsearch) {
+	if (servers == null && lserver.size() > 0)
+		servers = (String []) lserver.toArray(new String[0]);
+	if (searchlist == null && lsearch.size() > 0)
+		searchlist = (Name []) lsearch.toArray(new Name[0]);
+}
+
 /**
  * Looks in the system properties to find servers and a search path.
  * Servers are defined by dns.server=server1,server2...
  * The search path is defined by dns.search=domain1,domain2...
  */
-private void
+private boolean
 findProperty() {
 	String s, prop;
-	List l = new ArrayList(0);
+	List lserver = new ArrayList(0);
+	List lsearch = new ArrayList(0);
 	StringTokenizer st;
 
 	prop = System.getProperty("dns.server");
 	if (prop != null) {
 		st = new StringTokenizer(prop, ",");
 		while (st.hasMoreTokens())
-			addServer(st.nextToken(), l);
-		if (l.size() > 0)
-			servers = (String []) l.toArray(new String[l.size()]);
+			addServer(st.nextToken(), lserver);
 	}
 
-	l.clear();
 	prop = System.getProperty("dns.search");
 	if (prop != null) {
 		st = new StringTokenizer(prop, ",");
-		while (st.hasMoreTokens()) {
-			addSearch(st.nextToken(), l);
-		}
-		if (l.size() > 0)
-			searchlist = (Name []) l.toArray(new Name[l.size()]);
+		while (st.hasMoreTokens())
+			addSearch(st.nextToken(), lsearch);
 	}
+	configureFromLists(lserver, lsearch);
+	return (servers != null && searchlist != null);
+}
+
+/**
+ * Uses the undocumented Sun DNS implementation to determine the configuration.
+ * This doesn't work or even compile with all JVMs (gcj, for example).
+ */
+private boolean
+findSunJVM() {
+	List lserver = new ArrayList(0);
+	List lserver_tmp;
+	List lsearch = new ArrayList(0);
+	List lsearch_tmp;
+
+	try {
+		Class [] noClasses = new Class[0];
+		Object [] noObjects = new Object[0];
+		String resConfName = "sun.net.dns.ResolverConfiguration";
+		Class resConfClass = Class.forName(resConfName);
+		Object resConf;
+
+		// ResolverConfiguration resConf = ResolverConfiguration.open();
+		Method open = resConfClass.getDeclaredMethod("open", noClasses);
+		resConf = open.invoke(null, noObjects);
+
+		// lserver_tmp = resConf.nameservers();
+		Method nameservers = resConfClass.getMethod("nameservers",
+							    noClasses);
+		lserver_tmp = (List) nameservers.invoke(resConf, noObjects);
+
+		// lsearch_tmp = resConf.searchlist();
+		Method searchlist = resConfClass.getMethod("searchlist",
+							    noClasses);
+		lsearch_tmp = (List) searchlist.invoke(resConf, noObjects);
+	}
+	catch (Exception e) {
+		return false;
+	}
+
+	if (lserver_tmp.size() > 0) {
+		Iterator it = lserver_tmp.iterator();
+		while (it.hasNext())
+			addServer((String) it.next(), lserver);
+	}
+
+	if (lsearch_tmp.size() > 0) {
+		Iterator it = lsearch_tmp.iterator();
+		while (it.hasNext())
+			addSearch((String) it.next(), lsearch);
+	}
+	configureFromLists(lserver, lsearch);
+	return true;
 }
 
 /**
@@ -149,13 +222,7 @@ findResolvConf(String file) {
 	catch (IOException e) {
 	}
 
-	if (servers == null && lserver.size() > 0)
-		servers =
-			(String [])lserver.toArray(new String[lserver.size()]);
-
-	if (searchlist == null && lsearch.size() > 0)
-		searchlist =
-			(Name [])lsearch.toArray(new Name[lsearch.size()]);
+	configureFromLists(lserver, lsearch);
 }
 
 private void
@@ -243,13 +310,7 @@ findWin(InputStream in) {
 			}
 		}
 		
-		if (servers == null && lserver.size() > 0)
-			servers = (String [])lserver.toArray
-						(new String[lserver.size()]);
-
-		if (searchlist == null && lsearch.size() > 0)
-			searchlist =
-			    (Name [])lsearch.toArray(new Name[lsearch.size()]);
+		configureFromLists(lserver, lsearch);
 	}
 	catch (IOException e) {
 	}
