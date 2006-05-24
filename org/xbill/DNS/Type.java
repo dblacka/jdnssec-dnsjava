@@ -170,7 +170,7 @@ public static final int MAILA		= 254;
 public static final int ANY		= 255;
 
 /** DNSSEC Lookaside Validation records. */
-public static final int DLV       = 65323;
+public static final int DLV       = 32769; // assigned by RFC 4431
 
 /** Next SECure, 3rd edition */
 public static final int NSEC3     = 65324;
