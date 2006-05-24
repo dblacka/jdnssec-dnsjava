@@ -27,15 +27,17 @@ import org.xbill.DNS.utils.base32;
 public class NSEC3Record extends Record
 {
   public static final byte SHA1_DIGEST_ID = 1;
+  public static final int  MAX_ITERATIONS = 1 << 23 - 1;
 
   private boolean          optInFlag;
   private byte             hashAlg;
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
-  private byte[]           owner;             // cached numerical owner value.
+  private byte[]           owner;                       // cached numerical
+                                                        // owner value.
   private int              types[];
-  private String           comment;           // Optional commentì
+  private String           comment;                     // Optional commentì
 
   NSEC3Record()
   {
@@ -79,6 +81,8 @@ public class NSEC3Record extends Record
       System.arraycopy(salt, 0, this.salt, 0, salt.length);
     }
 
+    if (next.length > 255)
+      throw new IllegalArgumentException("Invalid next length");
     this.next = new byte[next.length];
     System.arraycopy(next, 0, this.next, 0, next.length);
 
@@ -110,17 +114,6 @@ public class NSEC3Record extends Record
     return array;
   }
 
-  private int hashLength(int hashAlg)
-  {
-    switch (hashAlg)
-    {
-      case SHA1_DIGEST_ID :
-        return 20;
-      default :
-        return -1;
-    }
-  }
-
   void rrFromWire(DNSInput in) throws IOException
   {
     hashAlg = (byte) in.readU8();
@@ -135,14 +128,13 @@ public class NSEC3Record extends Record
     else
       salt = null;
 
-    int next_len = hashLength(hashAlg);
-    if (next_len < 0)
-    {
-      throw new WireParseException("Unrecognized NSEC3 hash algorithm"
-          + hashAlg);
-    }
+    int next_length = in.readU8();
+    if (next_length > 0)
+      next = in.readByteArray(next_length);
+    else
+      next = null;
 
-    next = in.readByteArray(next_len);
+    next = in.readByteArray(next_length);
 
     // Read typemap.
     int lastbase = -1;
@@ -177,6 +169,7 @@ public class NSEC3Record extends Record
     int oflag = st.getUInt8();
     optInFlag = (oflag != 0);
     // Note that the hash alg can either be a number or a mnemonic
+    // Well, it can't really be a mnemonic, but we support it anyway.
     String hashAlgStr = st.getString();
     if (Character.isDigit(hashAlgStr.charAt(0)))
     {
@@ -194,19 +187,19 @@ public class NSEC3Record extends Record
       hashAlg = mnemonicToAlg(hashAlgStr);
     }
 
-    if (hashLength(hashAlg) < 0)
-    {
-      throw st.exception("Unrecognized NSEC3 hash algorithm: " + hashAlg);
-    }
     iterations = (int) st.getUInt32();
     String salt_hex = st.getString();
-    if (salt_hex.equals("-") || salt_hex.equals("0") || salt_hex.equals("00"))
+    if (salt_hex.equals("-") || salt_hex.equals("0"))
     {
       salt = null;
     }
     else
     {
       salt = base16.fromString(salt_hex);
+      if (salt == null)
+        throw st.exception("Invalid salt value: " + salt_hex);
+      if (salt.length > 255)
+        throw st.exception("Invalid salt value (too long): " + salt_hex);
     }
 
     String next_base32 = st.getString();
@@ -334,6 +327,7 @@ public class NSEC3Record extends Record
     out.writeU16(iterations & 0xFFFF);
     out.writeU8(salt == null ? 0 : salt.length);
     if (salt != null) out.writeByteArray(salt);
+    out.writeU8(next.length);
     out.writeByteArray(next);
 
     if (types.length == 0) return;
