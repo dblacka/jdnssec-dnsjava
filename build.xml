@@ -4,8 +4,9 @@
     <property name="doc_dir" value="${basedir}/doc"/>
     <property name="dist_dir" value="${basedir}"/>
     <property name="tests_dir" value="${basedir}/tests"/>
+    <property name="tests_build_dir" value="${basedir}/build/tests"/>
     <property name="reports_dir" value="${basedir}/reports"/>
-    <property name="version" value="2.0.0"/>
+    <property name="version" value="2.0.0-vrsn-2"/>
     <property name="jarname" value="dnsjava-${version}.jar"/>
     <property name="zipname" value="dnsjava-${version}.zip"/>
     <property name="targzname" value="dnsjava-${version}.tar.gz"/>
@@ -18,7 +19,13 @@
     <target name="all" description="Compile and Jar" depends="jar">
     </target>
 
-    <target name="compile" description="Compile everything">
+    <target name="prepare-src">
+      <mkdir dir="${build_dir}" />
+      <mkdir dir="${tests_build_dir}" />
+    </target>
+
+    <target name="compile" description="Compile everything" 
+            depends="prepare-src">
 	<javac destdir="${build_dir}" debug="true">
 	    <src path="${src_dir}"/>
 	    <exclude name="tests/**"/>
@@ -88,16 +95,16 @@
     </target>
 
     <target name="compile_tests" depends="compile">
-	<javac destdir="${tests_dir}" debug="true" classpath="${build_dir}">
-
-	    <src path="${tests_dir}"/>
-	</javac>
+      <javac destdir="${tests_build_dir}" debug="true" 
+             classpath="${build_dir}">
+        <src path="${tests_dir}"/>
+      </javac>
     </target>
 
     <target name="run_tests">
       <path id="tests_classpath">
 	<path location="${basedir}"/>
-	<path location="${tests_dir}"/>
+	<path location="${tests_build_dir}"/>
         <path location="${build_dir}"/>
       </path>
       <antcall target="_run_tests">
@@ -106,7 +113,8 @@
     </target>
 
     <target name="_run_tests" depends="compile_tests">
-      <junit fork="yes" forkmode="perTest" dir="${basedir}" haltonerror="on" haltonfailure="on">
+      <junit fork="yes" forkmode="perTest" dir="${basedir}" 
+             haltonerror="on" haltonfailure="on">
 	<classpath>
 	  <path refid="${classpath_name}"/>
 	</classpath>
@@ -120,7 +128,8 @@
       </junit>
     </target>
     
-    <target name="coverage_report" depends="clean,compile_tests" if="jcoverage_dir">
+    <target name="coverage_report" depends="clean,compile_tests" 
+            if="jcoverage_dir">
       <taskdef resource="tasks.properties">
 	<classpath>
 		<path location="${jcoverage_dir}/jcoverage.jar"/>
