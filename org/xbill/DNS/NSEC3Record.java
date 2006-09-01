@@ -29,7 +29,7 @@ public class NSEC3Record extends Record
   public static final byte SHA1_DIGEST_ID = 1;
   public static final int  MAX_ITERATIONS = 1 << 23 - 1;
 
-  private boolean          optInFlag;
+  private boolean          optOutFlag;
   private byte             hashAlg;
   private int              iterations;
   private byte[]           salt;
@@ -37,7 +37,7 @@ public class NSEC3Record extends Record
   private byte[]           owner;                       // cached numerical
                                                         // owner value.
   private int              types[];
-  private String           comment;                     // Optional commentì
+  private String           comment;                     // Optional commentï¿½
 
   NSEC3Record()
   {
@@ -55,22 +55,22 @@ public class NSEC3Record extends Record
    *          zonename).
    * @param dclass The class.
    * @param ttl The TTL.
-   * @param optInFlag The value of the "O" flag.
+   * @param optOutFlag The value of the "O" flag.
    * @param hashAlg The hash algorithm.
    * @param iterations The number of hash iterations.
    * @param salt The salt to use (may be null).
    * @param next The next hash (may not be null).
    * @param types The types present at the original ownername.
    */
-  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag,
+  public NSEC3Record(Name name, int dclass, long ttl, boolean optOutFlag,
       byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
   {
     super(name, Type.NSEC3, dclass, ttl);
-    this.optInFlag = optInFlag;
+    this.optOutFlag = optOutFlag;
     this.hashAlg = hashAlg;
     this.iterations = iterations;
 
-    if (this.iterations < 0 || this.iterations >= 16777216)
+    if (this.iterations < 0 || this.iterations >= MAX_ITERATIONS)
       throw new IllegalArgumentException("Invalid iterations value");
 
     if (salt != null)
@@ -118,7 +118,7 @@ public class NSEC3Record extends Record
   {
     hashAlg = (byte) in.readU8();
     byte iter_msb = (byte) in.readU8();
-    optInFlag = (iter_msb & 0x80) > 0;
+    optOutFlag = (iter_msb & 0x80) > 0;
     iter_msb &= 0x7F;
     iterations = iter_msb << 24 | in.readU16();
 
@@ -166,8 +166,6 @@ public class NSEC3Record extends Record
 
   void rdataFromString(Tokenizer st, Name origin) throws IOException
   {
-    int oflag = st.getUInt8();
-    optInFlag = (oflag != 0);
     // Note that the hash alg can either be a number or a mnemonic
     // Well, it can't really be a mnemonic, but we support it anyway.
     String hashAlgStr = st.getString();
@@ -186,6 +184,9 @@ public class NSEC3Record extends Record
     {
       hashAlg = mnemonicToAlg(hashAlgStr);
     }
+
+    int oflag = st.getUInt8();
+    optOutFlag = (oflag != 0);
 
     iterations = (int) st.getUInt32();
     String salt_hex = st.getString();
@@ -226,9 +227,9 @@ public class NSEC3Record extends Record
   String rrToString()
   {
     StringBuffer sb = new StringBuffer();
-    sb.append(optInFlag ? '1' : '0');
-    sb.append(' ');
     sb.append(hashAlg);
+    sb.append(' ');
+    sb.append(optOutFlag ? '1' : '0');
     sb.append(' ');
     sb.append(iterations);
     sb.append(' ');
@@ -267,7 +268,7 @@ public class NSEC3Record extends Record
 
   public boolean getOptInFlag()
   {
-    return optInFlag;
+    return optOutFlag;
   }
 
   public byte getHashAlgorithm()
@@ -322,7 +323,7 @@ public class NSEC3Record extends Record
   {
     out.writeU8(hashAlg);
     int iter_msb = (byte) ((iterations >> 16) & 0x7F);
-    iter_msb |= (optInFlag ? 0x80 : 0x00);
+    iter_msb |= (optOutFlag ? 0x80 : 0x00);
     out.writeU8(iter_msb & 0xFF);
     out.writeU16(iterations & 0xFFFF);
     out.writeU8(salt == null ? 0 : salt.length);

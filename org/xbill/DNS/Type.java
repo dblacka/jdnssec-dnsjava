@@ -177,6 +177,8 @@ public static final int DLV       = 32769; // assigned by RFC 4431
 /** Next SECure, 3rd edition */
 public static final int NSEC3     = 65324;
 
+public static final int NSEC3PARAM = 65325;
+
 private static class TypeMnemonic extends Mnemonic {
 	private HashMap objects;
 
@@ -263,6 +265,7 @@ static {
 	types.add(ANY, "ANY");
     types.add(DLV, "DLV", new DLVRecord());
     types.add(NSEC3, "NSEC3", new NSEC3Record());
+    types.add(NSEC3PARAM, "NSEC3PARAM", new NSEC3PARAMRecord());
 }
 
 private
