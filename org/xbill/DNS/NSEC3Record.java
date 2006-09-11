@@ -134,8 +134,6 @@ public class NSEC3Record extends Record
     else
       next = null;
 
-    next = in.readByteArray(next_length);
-
     // Read typemap.
     int lastbase = -1;
     List list = new ArrayList();
