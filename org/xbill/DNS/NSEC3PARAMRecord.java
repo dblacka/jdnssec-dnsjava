@@ -3,7 +3,6 @@
 package org.xbill.DNS;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.xbill.DNS.utils.base16;
 
@@ -22,6 +21,7 @@ import org.xbill.DNS.utils.base16;
 public class NSEC3PARAMRecord extends Record
 {
   private byte             hashAlg;
+  private byte             flags;
   private int              iterations;
   private byte[]           salt;
 
@@ -45,10 +45,11 @@ public class NSEC3PARAMRecord extends Record
    * @param salt The salt to use (may be null).
    */
   public NSEC3PARAMRecord(Name name, int dclass, long ttl, byte hashAlg, 
-      int iterations, byte[] salt)
+      byte flags, int iterations, byte[] salt)
   {
     super(name, Type.NSEC3PARAM, dclass, ttl);
     this.hashAlg = hashAlg;
+    this.flags = flags;
     this.iterations = iterations;
 
     if (this.iterations < 0 || this.iterations >= NSEC3Record.MAX_ITERATIONS)
@@ -66,9 +67,8 @@ public class NSEC3PARAMRecord extends Record
   void rrFromWire(DNSInput in) throws IOException
   {
     hashAlg = (byte) in.readU8();
-    byte iter_msb = (byte) in.readU8();
-    iter_msb &= 0x7F;
-    iterations = iter_msb << 24 | in.readU16();
+    flags = (byte) in.readU8();
+    iterations = in.readU16();
 
     int salt_length = in.readU8();
     if (salt_length > 0)
@@ -80,9 +80,8 @@ public class NSEC3PARAMRecord extends Record
   void rrToWire(DNSOutput out, Compression c, boolean canonical)
   {
     out.writeU8(hashAlg);
-    int iter_msb = (byte) ((iterations >> 16) & 0x7F);
-    out.writeU8(iter_msb & 0xFF);
-    out.writeU16(iterations & 0xFFFF);
+    out.writeU8(flags);
+    out.writeU16(iterations);
     out.writeU8(salt == null ? 0 : salt.length);
     if (salt != null) out.writeByteArray(salt);
   }
@@ -108,7 +107,8 @@ public class NSEC3PARAMRecord extends Record
       hashAlg = NSEC3Record.mnemonicToAlg(hashAlgStr);
     }
 
-    iterations = (int) st.getUInt32();
+    flags = (byte) st.getUInt8();
+    iterations = st.getUInt16();
     String salt_hex = st.getString();
     if (salt_hex.equals("-") || salt_hex.equals("0"))
     {
@@ -130,6 +130,8 @@ public class NSEC3PARAMRecord extends Record
     StringBuffer sb = new StringBuffer();
     sb.append(hashAlg);
     sb.append(' ');
+    sb.append(flags);
+    sb.append(' ');
     sb.append(iterations);
     sb.append(' ');
     sb.append(salt == null ? "-" : base16.toString(salt));
@@ -142,6 +144,11 @@ public class NSEC3PARAMRecord extends Record
     return hashAlg;
   }
 
+  public byte getFlags()
+  {
+    return flags;
+  }
+  
   public int getIterations()
   {
     return iterations;

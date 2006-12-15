@@ -26,11 +26,12 @@ import org.xbill.DNS.utils.base32;
 
 public class NSEC3Record extends Record
 {
+  public static final byte OPT_OUT_FLAG = 0x01;
   public static final byte SHA1_DIGEST_ID = 1;
-  public static final int  MAX_ITERATIONS = 1 << 23 - 1;
+  public static final int  MAX_ITERATIONS = 1 << 16 - 1;
 
-  private boolean          optOutFlag;
   private byte             hashAlg;
+  private byte             flags;
   private int              iterations;
   private byte[]           salt;
   private byte[]           next;
@@ -62,12 +63,12 @@ public class NSEC3Record extends Record
    * @param next The next hash (may not be null).
    * @param types The types present at the original ownername.
    */
-  public NSEC3Record(Name name, int dclass, long ttl, boolean optOutFlag,
-      byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types)
+  public NSEC3Record(Name name, int dclass, long ttl, byte hashAlg,
+      byte flags, int iterations, byte[] salt, byte[] next, int[] types)
   {
     super(name, Type.NSEC3, dclass, ttl);
-    this.optOutFlag = optOutFlag;
     this.hashAlg = hashAlg;
+    this.flags = flags;
     this.iterations = iterations;
 
     if (this.iterations < 0 || this.iterations >= MAX_ITERATIONS)
@@ -95,11 +96,11 @@ public class NSEC3Record extends Record
     Arrays.sort(this.types);
   }
 
-  public NSEC3Record(Name name, int dclass, long ttl, boolean optInFlag,
-      byte hashAlg, int iterations, byte[] salt, byte[] next, int[] types,
+  public NSEC3Record(Name name, int dclass, long ttl, byte hashAlg,
+      byte flags, int iterations, byte[] salt, byte[] next, int[] types,
       String comment)
   {
-    this(name, dclass, ttl, optInFlag, hashAlg, iterations, salt, next, types);
+    this(name, dclass, ttl, hashAlg, flags, iterations, salt, next, types);
     this.comment = comment;
   }
 
@@ -117,11 +118,8 @@ public class NSEC3Record extends Record
   void rrFromWire(DNSInput in) throws IOException
   {
     hashAlg = (byte) in.readU8();
-    byte iter_msb = (byte) in.readU8();
-    optOutFlag = (iter_msb & 0x80) > 0;
-    iter_msb &= 0x7F;
-    iterations = iter_msb << 24 | in.readU16();
-
+    flags = (byte) in.readU8();
+    iterations = in.readU16();
     int salt_length = in.readU8();
     if (salt_length > 0)
       salt = in.readByteArray(salt_length);
@@ -183,10 +181,9 @@ public class NSEC3Record extends Record
       hashAlg = mnemonicToAlg(hashAlgStr);
     }
 
-    int oflag = st.getUInt8();
-    optOutFlag = (oflag != 0);
-
-    iterations = (int) st.getUInt32();
+    flags = (byte) st.getUInt8();
+    iterations = st.getUInt16();
+    
     String salt_hex = st.getString();
     if (salt_hex.equals("-") || salt_hex.equals("0"))
     {
@@ -227,7 +224,7 @@ public class NSEC3Record extends Record
     StringBuffer sb = new StringBuffer();
     sb.append(hashAlg);
     sb.append(' ');
-    sb.append(optOutFlag ? '1' : '0');
+    sb.append(flags);
     sb.append(' ');
     sb.append(iterations);
     sb.append(' ');
@@ -264,9 +261,14 @@ public class NSEC3Record extends Record
     return next;
   }
 
+  public byte getFlags()
+  {
+    return flags;
+  }
+  
   public boolean getOptInFlag()
   {
-    return optOutFlag;
+    return (flags & OPT_OUT_FLAG) != 0;
   }
 
   public byte getHashAlgorithm()
@@ -320,10 +322,8 @@ public class NSEC3Record extends Record
   void rrToWire(DNSOutput out, Compression c, boolean canonical)
   {
     out.writeU8(hashAlg);
-    int iter_msb = (byte) ((iterations >> 16) & 0x7F);
-    iter_msb |= (optOutFlag ? 0x80 : 0x00);
-    out.writeU8(iter_msb & 0xFF);
-    out.writeU16(iterations & 0xFFFF);
+    out.writeU8(flags);
+    out.writeU16(iterations);
     out.writeU8(salt == null ? 0 : salt.length);
     if (salt != null) out.writeByteArray(salt);
     out.writeU8(next.length);
