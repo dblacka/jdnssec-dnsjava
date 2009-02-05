@@ -150,6 +150,11 @@ public static final int NSEC		= 47;
 /** DNSSEC Key */
 public static final int DNSKEY		= 48;
 
+/** Next SECure, 3rd edition, RFC 5155 */
+public static final int NSEC3           = 50;
+
+public static final int NSEC3PARAM      = 51;
+    
 /** Transaction key - used to compute a shared secret or exchange a key */
 public static final int TKEY		= 249;
 
@@ -172,12 +177,8 @@ public static final int MAILA		= 254;
 public static final int ANY		= 255;
 
 /** DNSSEC Lookaside Validation records. */
-public static final int DLV       = 32769; // assigned by RFC 4431
+public static final int DLV             = 32769; // assigned by RFC 4431
 
-/** Next SECure, 3rd edition */
-public static final int NSEC3     = 65324;
-
-public static final int NSEC3PARAM = 65325;
 
 private static class TypeMnemonic extends Mnemonic {
 	private HashMap objects;
