@@ -51,6 +51,7 @@ private int dclass;
 private long ixfr_serial;
 private boolean want_fallback;
 
+private SocketAddress localAddress;
 private SocketAddress address;
 private TCPClient client;
 private TSIG tsig;
@@ -152,23 +153,6 @@ throws UnknownHostException
 /**
  * Instantiates a ZoneTransferIn object to do an AXFR (full zone transfer).
  * @param zone The zone to transfer.
- * @param res The resolver to use when doing the transfer.
- * @return The ZoneTransferIn object.
- *
- * @deprecated Use newAXFR(Name, String, int, TSIG) or newAXFR(Name,
- * SocketAddress, TSIG)
- */
-public static ZoneTransferIn
-newAXFR(Name zone, SimpleResolver res) {
-	ZoneTransferIn xfrin = newAXFR(zone, res.getAddress(),
-				       res.getTSIGKey());
-	xfrin.timeout = res.getTimeout() * 1000L;
-	return xfrin;
-}
-
-/**
- * Instantiates a ZoneTransferIn object to do an AXFR (full zone transfer).
- * @param zone The zone to transfer.
  * @param host The host from which to transfer the zone.
  * @param key The TSIG key used to authenticate the transfer, or null.
  * @return The ZoneTransferIn object.
@@ -229,26 +213,6 @@ throws UnknownHostException
  * @param zone The zone to transfer.
  * @param serial The existing serial number.
  * @param fallback If true, fall back to AXFR if IXFR is not supported.
- * @param res The resolver to use when doing the transfer.
- * @return The ZoneTransferIn object.
- *
- * @deprecated Use newIXFR(Name, long, int, String, int, TSIG) or
- * newIXFR((Name, long, int, SocketAddress, TSIG)
- */
-public static ZoneTransferIn
-newIXFR(Name zone, long serial, boolean fallback, SimpleResolver res) {
-	ZoneTransferIn xfrin = newIXFR(zone, serial, fallback,
-				       res.getAddress(), res.getTSIGKey());
-	xfrin.timeout = res.getTimeout() * 1000L;
-	return xfrin;
-}
-
-/**
- * Instantiates a ZoneTransferIn object to do an IXFR (incremental zone
- * transfer).
- * @param zone The zone to transfer.
- * @param serial The existing serial number.
- * @param fallback If true, fall back to AXFR if IXFR is not supported.
  * @param host The host from which to transfer the zone.
  * @param key The TSIG key used to authenticate the transfer, or null.
  * @return The ZoneTransferIn object.
@@ -285,7 +249,8 @@ getType() {
 public void
 setTimeout(int secs) {
 	if (secs < 0)
-		throw new IllegalArgumentException("timeout cannt be negative");
+		throw new IllegalArgumentException("timeout cannot be " +
+						   "negative");
 	timeout = 1000L * secs;
 }
 
@@ -299,10 +264,21 @@ setDClass(int dclass) {
 	this.dclass = dclass;
 }
 
+/**
+ * Sets the local address to bind to when sending messages.
+ * @param addr The local address to send messages from.
+ */
+public void
+setLocalAddress(SocketAddress addr) {
+	this.localAddress = addr;
+}
+
 private void
 openConnection() throws IOException {
 	long endTime = System.currentTimeMillis() + timeout;
 	client = new TCPClient(endTime);
+	if (localAddress != null)
+		client.bind(localAddress);
 	client.connect(address);
 }
 
@@ -365,7 +341,7 @@ parseRR(Record rec) throws ZoneTransferException {
 		if (type != Type.SOA)
 			fail("missing initial SOA");
 		initialsoa = rec;
-		// Remember the serial number in the intial SOA; we need it
+		// Remember the serial number in the initial SOA; we need it
 		// to recognize the end of an IXFR.
 		end_serial = getSOASerial(rec);
 		if (qtype == Type.IXFR && end_serial <= ixfr_serial) {
@@ -464,7 +440,8 @@ parseRR(Record rec) throws ZoneTransferException {
 private void
 closeConnection() {
 	try {
-		client.cleanup();
+		if (client != null)
+			client.cleanup();
 	}
 	catch (IOException e) {
 	}
@@ -550,8 +527,8 @@ doxfr() throws IOException, ZoneTransferException {
  */
 public List
 run() throws IOException, ZoneTransferException {
-	openConnection();
 	try {
+		openConnection();
 		doxfr();
 	}
 	finally {

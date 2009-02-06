@@ -60,10 +60,11 @@ SIG0Signer(int algorithm, PrivateKey privateKey, Name name,
     this.algorithm = (byte) algorithm;
     this.privateKey = privateKey;
     this.name = name;
-    KEYRecord keyRecord = KEYConverter.buildRecord(name, DClass.IN, 0,
-						   KEYRecord.OWNER_USER,
-						   KEYRecord.PROTOCOL_ANY,
-						   publicKey);
+    Record rec = KEYConverter.buildRecord(name, Type.KEY, DClass.IN, 0,
+					  KEYRecord.OWNER_USER,
+					  KEYRecord.PROTOCOL_ANY,
+					  algorithm, publicKey);
+    KEYRecord keyRecord = (KEYRecord) rec;
     this.footprint = keyRecord.getFootprint();
 }
 
@@ -113,7 +114,7 @@ throws IOException, SignatureException, InvalidKeyException,
 	 */
 	if (algorithm == DNSSEC.DSA) {
 		DSAKey dsakey = (DSAKey) privateKey;
-		signature = DSASignature.create(dsakey.getParams(), signature);
+		signature = DSASignature.toDNS(dsakey.getParams(), signature);
 	}
 	
 	SIGRecord sig = new SIGRecord(Name.root, DClass.ANY, 0, 0, algorithm,

@@ -56,7 +56,7 @@ public class NSEC3Record extends Record
    *          zonename).
    * @param dclass The class.
    * @param ttl The TTL.
-   * @param optOutFlag The value of the "O" flag.
+   * @param flags The value of the flags field.
    * @param hashAlg The hash algorithm.
    * @param iterations The number of hash iterations.
    * @param salt The salt to use (may be null).

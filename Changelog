@@ -1,3 +1,119 @@
+1/24/2008
+	- 2.0.6 released
+
+1/22/2008
+	- Fix an off-by-2 error that could cause an infinite loop when
+	  parsing a Name with a self-referential compression pointer.
+	  (reported by Carole Gill <cgill@silverspringnet.com>)
+
+	- Raise an exception when an invalid label type is seen in a wire
+	  format name.  The previous behavior would incorrectly parse invalid
+	  names, and could lead to infinite loops.
+	  (reported by Carole Gill <cgill@silverspringnet.com>)
+
+8/28/2007
+	- 2.0.5 released
+	- Add the ZoneTransferIn.setLocalAddress() method.  (based on a patch
+	  from <mpugge@users.sourceforge.net>)
+	- Build jar file with -source and -target options to provide
+	  compatibility with older Java releases (that is, revert to
+	  pre-2.0.4 behavior).
+	  (reported by Stefano Bagnara <apache@bago.org>)
+
+8/26/2007
+	- 2.0.4 released
+	- Update SPI code to work with java 6.
+	- Fix an argument parsing bug in the dig program, where failure to
+	  specify both type and class would cause the specified server to
+	  be ignored.
+	  (reported by Stefano Bagnara <bago75@users.sourceforge.net>)
+
+6/12/2007
+	- The SPFRecord constructors incorrectly created records whose
+	  internal type field was TXT, not SPF.
+	  (reported by Stefano Bagnara <bago75@users.sourceforge.net>)
+
+3/7/2007
+	- Message.getQuestion() incorrectly handled the case where the
+	  question section was represented by an empty list.
+	  (reported by Karl Auer <kauer@biplane.com.au>)
+
+2/15/2007
+	- Properly obey timeouts in TCPClient code when the message is
+	  read in multiple chunks. (based on a patch from
+	  Francesco Vivoli <fvivoli@ripe.net>)
+
+12/4/2006
+	- A cache lookup for a record would incorrectly return a delegation
+	  when records for both the queried type and NS were present.
+	  (reported by yosukear <y_arimoto_acare@users.sourceforge.net>)
+
+11/28/2006
+	- 2.0.3 released
+
+11/27/2006
+	- The Zone.fromXFR() method should be able to create zones
+	  from AXFR-style IXFR responses.
+	  (Bill Kuker <bkuker@users.sourceforge.net>)
+
+10/25/2006
+	- Make the routines that convert between the DNS and standard Java
+	  representations of DSA signatures public.
+	  (suggested by Klaus Malorny <Klaus.Malorny@knipp.de>)
+
+8/3/2006
+	- Add a TSIG constructor that takes an algorithm as a String.
+	- Add support to TSIG.fromString() for specifying an algorithm.
+
+7/30/2006
+	- When converting a PublicKey to a DNS record, allow the algorithm
+	  to be specified, as RSA keys can be either of the RSA-SHA1 or
+	  RSA-MD5 algorithms (based on a patch from
+	  Eric <ginipginob@users.sourceforge.net>)
+	- When converting a PublicKey to a DNS record, allow the type (KEY
+	  or DNSKEY) to be specified.
+	- Update the DNSSECVerifier code to use DNSKEY records, not KEY
+	  records.
+
+7/30/2006
+	- Added support for parsing the output of ipconfig in French .
+	  (Frederic Bazin <fbazin@users sourceforge.net>)
+
+7/30/2006
+	- If both "search" and "domain" lines are present in a resolv.conf
+	  file, the domain line should be ignored.
+
+7/26/2006
+	- Add support for the SPF record type.
+
+7/21/2006
+	- DNSSEC.digestRRset could digest records in the wrong order.
+	  (reported by David Blacka <davidb@verisignlabs.com> and
+	   Mahendra Jain <Majain@verisign.com>)
+
+6/26/2006
+	- 2.0.2 released.
+
+6/22/2006
+	- Add support for the IPSECKEY record type.
+
+5/18/2006
+	- The result of a Lookup that involves a CNAME should include
+	  the queried name as one of the aliases, not the CNAME target.
+	  (Jon Lachelt <jon.lachelt@hp.com>)
+
+2/13/2006
+	- Loading zones containing RRsets with multiple records didn't work.
+	  (reported by Olafur Gudmundsson" <ogud@ogud.com>)
+
+1/24/2006
+	- AXFR requests could leak file descriptors if the connection
+	  failed. (Can Bican <can@bican.net>)
+
+11/30/2005
+	- Add a Resolver.setTimeout(int secs, int msecs) method.
+	  (requested by Dmitry Isakbayev) <isakdim@users.sourceforge.net>)
+
 11/30/2005
 	- 2.0.1 released.
 
@@ -695,6 +811,7 @@
 8/9/2001
 	- nsupdate compatibility and a bug fix to the update client.
 	  (patch from David Sward <david@berzerked.org>)
+
 8/8/2001
 	- The results of ANY queries were not properly cached.
 

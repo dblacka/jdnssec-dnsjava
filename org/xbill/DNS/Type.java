@@ -141,6 +141,9 @@ public static final int DS		= 43;
 /** SSH Key Fingerprint */
 public static final int SSHFP		= 44;
 
+/** IPSEC key */
+public static final int IPSECKEY	= 45;
+
 /** Resource Record Signature */
 public static final int RRSIG		= 46;
 
@@ -154,7 +157,10 @@ public static final int DNSKEY		= 48;
 public static final int NSEC3           = 50;
 
 public static final int NSEC3PARAM      = 51;
-    
+
+/** Sender Policy Framework (experimental) */
+public static final int SPF		= 99;
+
 /** Transaction key - used to compute a shared secret or exchange a key */
 public static final int TKEY		= 249;
 
@@ -254,9 +260,11 @@ static {
 	types.add(APL, "APL", new APLRecord());
 	types.add(DS, "DS", new DSRecord());
 	types.add(SSHFP, "SSHFP", new SSHFPRecord());
+	types.add(IPSECKEY, "IPSECKEY", new IPSECKEYRecord());
 	types.add(RRSIG, "RRSIG", new RRSIGRecord());
 	types.add(NSEC, "NSEC", new NSECRecord());
 	types.add(DNSKEY, "DNSKEY", new DNSKEYRecord());
+	types.add(SPF, "SPF", new SPFRecord());
 	types.add(TKEY, "TKEY", new TKEYRecord());
 	types.add(TSIG, "TSIG", new TSIGRecord());
 	types.add(IXFR, "IXFR");

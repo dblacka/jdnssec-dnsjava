@@ -388,7 +388,7 @@ Name(DNSInput in) throws WireParseException {
 				System.err.println("currently " + in.current() +
 						   ", pointer to " + pos);
 
-			if (pos >= in.current())
+			if (pos >= in.current() - 2)
 				throw new WireParseException("bad compression");
 			if (!savedState) {
 				in.save();
@@ -398,7 +398,9 @@ Name(DNSInput in) throws WireParseException {
 			if (Options.check("verbosecompression"))
 				System.err.println("current name '" + this +
 						   "', seeking to " + pos);
-			continue;
+			break;
+		default:
+			throw new WireParseException("bad label type");
 		}
 	}
 	if (savedState) {

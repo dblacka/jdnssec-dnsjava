@@ -167,7 +167,7 @@ fromXFR(ZoneTransferIn xfrin) throws IOException, ZoneTransferException {
 	data = new HashMap();
 	type = SECONDARY;
 
-	if (xfrin.getType() != Type.AXFR)
+	if (!xfrin.isAXFR())
 		throw new IllegalArgumentException("zones can only be " +
 						   "created from AXFRs");
 	origin = xfrin.getName();
@@ -471,9 +471,12 @@ addRecord(Record r) {
 	int rtype = r.getRRsetType();
 	synchronized (this) {
 		RRset rrset = findRRset(name, rtype);
-		if (rrset == null)
+		if (rrset == null) {
 			rrset = new RRset(r);
-		addRRset(name, rrset);
+			addRRset(name, rrset);
+		} else {
+			rrset.addRR(r);
+		}
 	}
 }
 

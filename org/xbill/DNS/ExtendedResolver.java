@@ -335,19 +335,14 @@ setTSIGKey(TSIG key) {
 }
 
 public void
-setTSIGKey(Name name, byte [] key) {
-	setTSIGKey(new TSIG(name, key));
-}
-
-public void
-setTSIGKey(String name, String key) {
-	setTSIGKey(new TSIG(name, key));
+setTimeout(int secs, int msecs) {
+	for (int i = 0; i < resolvers.size(); i++)
+		((Resolver)resolvers.get(i)).setTimeout(secs, msecs);
 }
 
 public void
 setTimeout(int secs) {
-	for (int i = 0; i < resolvers.size(); i++)
-		((Resolver)resolvers.get(i)).setTimeout(secs);
+	setTimeout(secs, 0);
 }
 
 /**

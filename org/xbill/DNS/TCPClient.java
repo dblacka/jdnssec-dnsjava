@@ -57,6 +57,9 @@ send(byte [] data) throws IOException {
 				if (n < 0)
 					throw new EOFException();
 				nsent += (int) n;
+				if (nsent < data.length + 2 &&
+				    System.currentTimeMillis() > endTime)
+					throw new SocketTimeoutException();
 			} else
 				blockUntil(key, endTime);
 		}
@@ -81,6 +84,9 @@ _recv(int length) throws IOException {
 				if (n < 0)
 					throw new EOFException();
 				nrecvd += (int) n;
+				if (nrecvd < length &&
+				    System.currentTimeMillis() > endTime)
+					throw new SocketTimeoutException();
 			} else
 				blockUntil(key, endTime);
 		}
