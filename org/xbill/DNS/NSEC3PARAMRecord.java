@@ -7,12 +7,11 @@ import java.io.IOException;
 import org.xbill.DNS.utils.base16;
 
 /**
- * Next SECure name 3 - this record contains the next hashed name in an
- * ordered list of hashed names in the zone, and a set of types for which
- * records exist for this name. The presence of this record in a response
- * signifies a negative response from a DNSSEC-signed zone.
- * 
- * This replaces the NSEC and NXT records, when used.
+ * Next SECure name 3 Parameters - this record contains the parameters (hash
+ * algorithm, salt, iterations) used for a valid, complete NSEC3 chain present
+ * in a zone. Zones signed using NSEC3 must include this record at the zone apex
+ * to inform authoritative servers that NSEC3 is being used with the given
+ * parameters.
  * 
  * @author Brian Wellington
  * @author David Blacka
@@ -37,7 +36,7 @@ public class NSEC3PARAMRecord extends Record
   /**
    * Creates an NSEC3PARAM record from the given data.
    * 
-   * @param name The ownername of the NSEC3 record (generally the zone name).
+   * @param name The ownername of the NSEC3PARAM record (generally the zone name).
    * @param dclass The class.
    * @param ttl The TTL.
    * @param hashAlg The hash algorithm.
