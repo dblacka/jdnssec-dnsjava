@@ -159,7 +159,7 @@ mapToWire(DNSOutput out, int [] array, int mapbase,
 
 void
 rrToWire(DNSOutput out, Compression c, boolean canonical) {
-	next.toWire(out, null, canonical);
+	next.toWire(out, null, false); // note: next name is not lowercased.
 
 	if (types.length == 0)
 		return;
