@@ -153,6 +153,9 @@ public static final int NSEC		= 47;
 /** DNSSEC Key */
 public static final int DNSKEY		= 48;
 
+/** DHCp IDentifier */
+public static final int DHCID       = 49;
+
 /** Next SECure, 3rd edition, RFC 5155 */
 public static final int NSEC3           = 50;
 
@@ -264,6 +267,7 @@ static {
 	types.add(RRSIG, "RRSIG", new RRSIGRecord());
 	types.add(NSEC, "NSEC", new NSECRecord());
 	types.add(DNSKEY, "DNSKEY", new DNSKEYRecord());
+	types.add(DHCID, "DHCID", new DHCIDRecord());
 	types.add(SPF, "SPF", new SPFRecord());
 	types.add(TKEY, "TKEY", new TKEYRecord());
 	types.add(TSIG, "TSIG", new TSIGRecord());
