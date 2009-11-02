@@ -63,6 +63,7 @@
 	<javadoc destdir="${doc_dir}"
 		 sourcepath="${src_dir}"
 		 packagenames="org.xbill.DNS,org.xbill.DNS.utils,org.xbill.DNS.security,org.xbill.DNS.spi"
+		 additionalparam="-notimestamp"
 		 windowtitle="dnsjava documentation">
 
 	    <link href="${j2se.javadoc}"/>
@@ -94,51 +95,56 @@
 
     <target name="compile_tests" depends="compile">
 	<javac destdir="${tests_build_dir}" debug="true" 
-	       classpath="${build_dir}" target="1.4" source="1.4">
+	       classpath="${build_dir}:${tests_dir}/junit-3.8.1.jar" target="1.4" source="1.4">
 	    <src path="${tests_dir}"/>
 	</javac>
     </target>
 
     <target name="run_tests">
       <path id="tests_classpath">
-	<path location="${tests_build_dir}"/>
-	<path location="${build_dir}"/>
+        <path location="${tests_build_dir}"/>
+        <path location="${build_dir}"/>
+        <path location="${tests_dir}/junit-3.8.1.jar"/>
       </path>
       <antcall target="_run_tests">
-	<param name="classpath_name" value="tests_classpath"/>
+        <param name="classpath_name" value="tests_classpath"/>
       </antcall>
     </target>
 
     <target name="_run_tests" depends="compile_tests">
-      <junit fork="yes" forkmode="perTest" dir="${basedir}" haltonerror="on" haltonfailure="on">
-	<classpath>
-	  <path refid="${classpath_name}"/>
-	</classpath>
-	<formatter type="plain" usefile="no"/>
-	<test name="${testcase}" if="testcase"/>
-	<batchtest unless="testcase">
-	  <fileset dir="${tests_dir}">
-	  <include name="**/*Test.class"/>
-	</fileset>
-	</batchtest>
+      <junit fork="yes" forkmode="perTest" dir="${basedir}" 
+             haltonerror="on" haltonfailure="on">
+        <classpath>
+          <path location="${tests_build_dir}"/>
+          <path location="${build_dir}"/>
+          <path location="${tests_dir}/junit-3.8.1.jar"/>
+        </classpath>
+        <formatter type="plain" usefile="no"/>
+        <test name="${testcase}" if="testcase"/>
+        <batchtest unless="testcase">
+          <fileset dir="${tests_build_dir}">
+            <include name="**/*Test.class"/>
+          </fileset>		
+        </batchtest>
       </junit>
     </target>
     
-    <target name="coverage_report" depends="clean,compile_tests" if="jcoverage_dir">
+    <target name="coverage_report" depends="clean,compile_tests" 
+            if="jcoverage_dir">
       <taskdef resource="tasks.properties">
-	<classpath>
-		<path location="${jcoverage_dir}/jcoverage.jar"/>
-		<path location="${jcoverage_dir}/lib/log4j/1.2.8/*.jar"/>
-		<path location="${jcoverage_dir}/log4j.jar"/>
-		<path location="${jcoverage_dir}/bcel.jar"/>
-		<path location="${jcoverage_dir}/oro.jar"/>
-		<path location="${jcoverage_dir}/gnu.getopt.jar"/>
-	</classpath>
+        <classpath>
+          <path location="${jcoverage_dir}/jcoverage.jar"/>
+          <path location="${jcoverage_dir}/lib/log4j/1.2.8/*.jar"/>
+          <path location="${jcoverage_dir}/log4j.jar"/>
+          <path location="${jcoverage_dir}/bcel.jar"/>
+          <path location="${jcoverage_dir}/oro.jar"/>
+          <path location="${jcoverage_dir}/gnu.getopt.jar"/>
+        </classpath>
       </taskdef>
       <instrument todir="${basedir}/iclasses">
-	<fileset dir="${basedir}">
-	  <include name="**/*.class"/>
-	  <exclude name="iclasses/**"/>
+        <fileset dir="${basedir}">
+          <include name="**/*.class"/>
+          <exclude name="iclasses/**"/>
 	  <exclude name="tests/**"/>
 	</fileset>
 	<ignore regex="org.xbill.DNS.Tokenizer$*"/>

@@ -1,0 +1,20 @@
+
+The differences between this version of DNSJava and the official version are:
+
+1. The build.xml has been modified to compile to the build/classes directory.
+
+2. org.xbill.DNS.Message.toString() has been modified to create an
+   "OPT PSEUDOSECTION" section rather than attempt to render the OPT
+   record in the additional section.
+
+3. org.xbill.DNS.NSEC3Record has a "comment" field that can be
+   specified in an alternate constructor.  If specified, the
+   toString() method will append the comment.  This feature exists so
+   that the jdnssec-signzone tool can add the original ownername as a
+   comment.
+
+4. A base32 test driver exists.  Unfortunately, this was left out of
+   the patch submission that added the base32 class to DNSJava, and
+   the DNSJava mainainter modified the class in such a way that the
+   test driver doesn't work.  It hasn't been completely adjusted to
+   work with the new base32 class yet.

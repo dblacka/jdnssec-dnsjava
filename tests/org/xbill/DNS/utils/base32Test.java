@@ -53,55 +53,55 @@ public class base32Test extends TestCase
   public void test_toString_empty()
   {
     byte[] data = new byte[0];
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("", out);
   }
 
   public void test_toString_basic1()
   {
     byte[] data = {0};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("00======", out);
-    out = b32nopadding.toString(data);
+    out = b32hexnopadding.toString(data);
     assertEquals("00", out);
   }
 
   public void test_toString_basic2()
   {
     byte[] data = {0, 0};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("0000====", out);
-    out = b32nopadding.toString(data);
+    out = b32hexnopadding.toString(data);
     assertEquals("0000", out);
   }
 
   public void test_toString_basic3()
   {
     byte[] data = {0, 0, 1};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("00002===", out);
-    out = b32nopadding.toString(data);
+    out = b32hexnopadding.toString(data);
     assertEquals("00002", out);
   }
 
   public void test_toString_basic4()
   {
     byte[] data = {(byte) 0xFC, 0, 0};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("VG000===", out);
   }
 
   public void test_toString_basic5()
   {
     byte[] data = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("VVVVU===", out);
   }
 
   public void test_toString_basic6()
   {
     byte[] data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    String out = b32padding.toString(data);
+    String out = b32hexpadding.toString(data);
     assertEquals("041061050O3GG28=", out);
   }
 
@@ -116,105 +116,105 @@ public class base32Test extends TestCase
 
   public void test_fromString_empty1()
   {
-    byte[] data = new byte[0];
-    byte[] out = b32padding.fromString("");
-    assertEquals(data, out);
+    //byte[] data = new byte[0];
+    byte[] out = b32hexpadding.fromString("");
+    assertTrue(out == null);
   }
 
   public void test_fromString_basic1()
   {
     byte[] exp = {0x53};
-    byte[] out = b32padding.fromString("AC");
+    byte[] out = b32hexpadding.fromString("AC");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic1_lc()
   {
     byte[] exp = {0x53};
-    byte[] out = b32padding.fromString("ac");
+    byte[] out = b32hexpadding.fromString("ac");
     assertEquals(exp, out);
   }
   
   public void test_fromString_basic1_padded()
   {
     byte[] exp = {0x53};
-    byte[] out = b32padding.fromString("AC======");
+    byte[] out = b32hexpadding.fromString("AC======");
     assertEquals(exp, out);
   }
   public void test_fromString_basic2()
   {
     byte[] exp = {0x54, 0x57};
-    byte[] out = b32padding.fromString("AHBG");
+    byte[] out = b32hexpadding.fromString("AHBG");
     assertEquals(exp, out);
-    out = b32padding.fromString("ahbg");
+    out = b32hexpadding.fromString("ahbg");
     assertEquals(exp, out);
-    out = b32padding.fromString("ahbg====");
+    out = b32hexpadding.fromString("ahbg====");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic3()
   {
     byte[] exp = {0x64, 0x65, 0x66};
-    byte[] out = b32padding.fromString("CHIMC");
+    byte[] out = b32hexpadding.fromString("CHIMC");
     assertEquals(exp, out);
-    out = b32padding.fromString("chImC");
+    out = b32hexpadding.fromString("chImC");
     assertEquals(exp, out);
-    out = b32padding.fromString("chimc===");
+    out = b32hexpadding.fromString("chimc===");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic4()
   {
     byte[] exp = {(byte) 0xFC, 0, 0};
-    byte[] out = b32padding.fromString("vg000");
+    byte[] out = b32hexpadding.fromString("vg000");
     assertEquals(exp, out);
-    out = b32padding.fromString("VG000===");
+    out = b32hexpadding.fromString("VG000===");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic5()
   {
     byte[] exp = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    byte[] out = b32padding.fromString("VVVVU");
+    byte[] out = b32hexpadding.fromString("VVVVU");
     assertEquals(out, exp);
   }
 
   public void test_fromString_basic6()
   {
     byte[] exp = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    byte[] out = b32padding.fromString("041061050O3GG28");
+    byte[] out = b32hexpadding.fromString("041061050O3GG28");
     assertEquals(out, exp);
-    out = b32padding.fromString("041061050O3GG28=");
+    out = b32hexpadding.fromString("041061050O3GG28=");
     assertEquals(out, exp);
   }
 
   public void test_fromString_invalid1()
   {
-    byte[] out = b32padding.fromString("000");
+    byte[] out = b32hexpadding.fromString("000");
     assertNull(out);
   }
 
   public void test_fromString_invalid2()
   {
-    byte[] out = b32padding.fromString("000000");
+    byte[] out = b32hexpadding.fromString("000000");
     assertNull(out);
   }
 
   public void test_fromString_invalid3()
   {
-    byte[] out = b32padding.fromString("0");
+    byte[] out = b32hexpadding.fromString("0");
     assertNull(out);
   }
 
   public void test_fromString_invalid4()
   {
-    byte[] out = b32padding.fromString("WX");
+    byte[] out = b32hexpadding.fromString("WX");
     assertNull(out);
   }
 
   public void test_fromString_invalid5()
   {
-    byte[] out = b32padding.fromString("00=");
+    byte[] out = b32hexpadding.fromString("00=");
     assertNull(out);
   }
 
