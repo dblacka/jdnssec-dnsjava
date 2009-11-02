@@ -12,7 +12,9 @@ import java.text.*;
  * @author Brian Wellington
  */
 
-public class Name implements Comparable {
+public class Name implements Comparable, Serializable {
+
+private static final long serialVersionUID = -7257019940971525644L;
 
 private static final int LABEL_NORMAL = 0;
 private static final int LABEL_COMPRESSION = 0xC0;
@@ -78,26 +80,6 @@ static {
 
 private
 Name() {
-}
-
-private final void
-dump(String prefix) {
-	String s;
-	try {
-		s = toString();
-	} catch (Exception e) {
-		s = "<unprintable>";
-	}
-	System.out.println(prefix + ": " + s);
-
-	int labels = labels();
-	for (int i = 0; i < labels; i++)
-		System.out.print(offset(i) + " ");
-	System.out.println("");
-
-	for (int i = 0; name != null && i < name.length; i++)
-		System.out.print((name[i] & 0xFF) + " ");
-	System.out.println("");
 }
 
 private final void
@@ -360,8 +342,7 @@ fromConstantString(String s) {
  */
 public
 Name(DNSInput in) throws WireParseException {
-	int len, pos, currentpos;
-	Name name2;
+	int len, pos;
 	boolean done = false;
 	byte [] label = new byte[MAXLABEL + 1];
 	boolean savedState = false;

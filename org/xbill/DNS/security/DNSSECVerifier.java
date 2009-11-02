@@ -5,7 +5,6 @@ package org.xbill.DNS.security;
 import java.util.*;
 import java.security.*;
 import org.xbill.DNS.*;
-import org.xbill.DNS.utils.*;
 
 /**
  * A class that verifies DNS data using digital signatures contained in DNSSEC
@@ -108,12 +107,12 @@ verifySIG(RRset set, RRSIGRecord sigrec, Cache cache) {
 			algString = "MD5withRSA";
 			break;
 		case DNSSEC.DSA:
-                case DNSSEC.DSA_NSEC3_SHA1:
+		case DNSSEC.DSA_NSEC3_SHA1:
 			sig = DSASignature.fromDNS(sigrec.getSignature());
 			algString = "SHA1withDSA";
 			break;
 		case DNSSEC.RSASHA1:
-                case DNSSEC.RSA_NSEC3_SHA1:
+		case DNSSEC.RSA_NSEC3_SHA1:
 			sig = sigrec.getSignature();
 			algString = "SHA1withRSA";
 			break;

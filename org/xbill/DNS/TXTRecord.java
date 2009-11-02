@@ -2,7 +2,6 @@
 
 package org.xbill.DNS;
 
-import java.io.*;
 import java.util.*;
 
 /**
@@ -12,6 +11,8 @@ import java.util.*;
  */
 
 public class TXTRecord extends TXTBase {
+
+private static final long serialVersionUID = -5780785764284221342L;
 
 TXTRecord() {}
 

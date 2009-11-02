@@ -39,6 +39,12 @@ import junit.framework.TestCase;
 
 public class base32Test extends TestCase
 {
+
+  private static final base32 b32padding = new base32(base32.Alphabet.BASE32, true, false);
+  private static final base32 b32nopadding = new base32(base32.Alphabet.BASE32, false, false);
+  private static final base32 b32hexpadding = new base32(base32.Alphabet.BASE32HEX, true, false);
+  private static final base32 b32hexnopadding = new base32(base32.Alphabet.BASE32HEX, false, false);
+  
   public base32Test(String name)
   {
     super(name);
@@ -47,200 +53,56 @@ public class base32Test extends TestCase
   public void test_toString_empty()
   {
     byte[] data = new byte[0];
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("", out);
   }
 
   public void test_toString_basic1()
   {
-    base32.usePadding(true);
     byte[] data = {0};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("00======", out);
-    base32.usePadding(false);
-    out = base32.toString(data);
+    out = b32nopadding.toString(data);
     assertEquals("00", out);
   }
 
   public void test_toString_basic2()
   {
-    base32.usePadding(true);
     byte[] data = {0, 0};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("0000====", out);
-    base32.usePadding(false);
-    out = base32.toString(data);
+    out = b32nopadding.toString(data);
     assertEquals("0000", out);
   }
 
   public void test_toString_basic3()
   {
-    base32.usePadding(true);    
     byte[] data = {0, 0, 1};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("00002===", out);
-    base32.usePadding(false);
-    out = base32.toString(data);
+    out = b32nopadding.toString(data);
     assertEquals("00002", out);
   }
 
   public void test_toString_basic4()
   {
-    base32.usePadding(true);
     byte[] data = {(byte) 0xFC, 0, 0};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("VG000===", out);
   }
 
   public void test_toString_basic5()
   {
-    base32.usePadding(true);
     byte[] data = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("VVVVU===", out);
   }
 
   public void test_toString_basic6()
   {
-    base32.usePadding(true);
     byte[] data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    String out = base32.toString(data);
+    String out = b32padding.toString(data);
     assertEquals("041061050O3GG28=", out);
-  }
-
-  public void test_formatString_empty1()
-  {
-    String out = base32.formatString(new byte[0], 5, "", false);
-    assertEquals("", out);
-  }
-
-  public void test_formatString_shorter()
-  {
-    base32.usePadding(true);        
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 17, "", false);
-    assertEquals("041061050O3GG28=", out);
-  }
-
-  public void test_formatString_sameLength()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 16, "", false);
-    assertEquals("041061050O3GG28=", out);
-  }
-
-  public void test_formatString_oneBreak()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 14, "", false);
-    assertEquals("041061050O3GG2\n8=", out);
-  }
-
-  public void test_formatString_twoBreaks1()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 7, "", false);
-    assertEquals("0410610\n50O3GG2\n8=", out);
-    base32.usePadding(false);
-    out = base32.formatString(in, 7, "", false);
-    assertEquals("0410610\n50O3GG2\n8", out);
-  }
-
-  public void test_formatString_twoBreaks2()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 6, "", false);
-    assertEquals("041061\n050O3G\nG28=", out);
-    base32.usePadding(false);
-    out = base32.formatString(in, 6, "", false);
-    assertEquals("041061\n050O3G\nG28", out);
-  }
-
-  public void test_formatString_shorterWithPrefix()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28="(16 chars)
-    String out = base32.formatString(in, 16, "!_", false);
-    assertEquals("!_041061050O3GG28=", out);
-    base32.usePadding(false);
-    out = base32.formatString(in, 16, "!_", false);
-    assertEquals("!_041061050O3GG28", out);
-  }
-
-  public void test_formatString_sameLengthWithPrefix()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 16, "!_", false);
-    assertEquals("!_041061050O3GG28=", out);
-  }
-
-  public void test_formatString_oneBreakWithPrefix()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 10, "!_", false);
-    assertEquals("!_041061050O\n!_3GG28=", out);
-  }
-
-  public void test_formatString_twoBreaks1WithPrefix()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 7, "!_", false);
-    assertEquals("!_0410610\n!_50O3GG2\n!_8=", out);
-  }
-
-  public void test_formatString_twoBreaks2WithPrefix()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 6, "!_", false);
-    assertEquals("!_041061\n!_050O3G\n!_G28=", out);
-  }
-
-  public void test_formatString_shorterWithPrefixAndClose()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 17, "!_", true);
-    assertEquals("!_041061050O3GG28= )", out);
-  }
-
-  public void test_formatString_sameLengthWithPrefixAndClose()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 16, "!_", true);
-    assertEquals("!_041061050O3GG28= )", out);
-  }
-
-  public void test_formatString_oneBreakWithPrefixAndClose()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 10, "!_", true);
-    assertEquals("!_041061050O\n!_3GG28= )", out);
-  }
-
-  public void test_formatString_twoBreaks1WithPrefixAndClose()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 7, "!_", true);
-    assertEquals("!_0410610\n!_50O3GG2\n!_8= )", out);
-  }
-
-  public void test_formatString_twoBreaks2WithPrefixAndClose()
-  {
-    base32.usePadding(true);    
-    byte[] in = {1, 2, 3, 4, 5, 6, 7, 8, 9}; // "041061050O3GG28=" (16 chars)
-    String out = base32.formatString(in, 6, "!_", true);
-    assertEquals("!_041061\n!_050O3G\n!_G28= )", out);
   }
 
   private void assertEquals(byte[] exp, byte[] act)
@@ -255,104 +117,104 @@ public class base32Test extends TestCase
   public void test_fromString_empty1()
   {
     byte[] data = new byte[0];
-    byte[] out = base32.fromString("");
+    byte[] out = b32padding.fromString("");
     assertEquals(data, out);
   }
 
   public void test_fromString_basic1()
   {
     byte[] exp = {0x53};
-    byte[] out = base32.fromString("AC");
+    byte[] out = b32padding.fromString("AC");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic1_lc()
   {
     byte[] exp = {0x53};
-    byte[] out = base32.fromString("ac");
+    byte[] out = b32padding.fromString("ac");
     assertEquals(exp, out);
   }
   
   public void test_fromString_basic1_padded()
   {
     byte[] exp = {0x53};
-    byte[] out = base32.fromString("AC======");
+    byte[] out = b32padding.fromString("AC======");
     assertEquals(exp, out);
   }
   public void test_fromString_basic2()
   {
     byte[] exp = {0x54, 0x57};
-    byte[] out = base32.fromString("AHBG");
+    byte[] out = b32padding.fromString("AHBG");
     assertEquals(exp, out);
-    out = base32.fromString("ahbg");
+    out = b32padding.fromString("ahbg");
     assertEquals(exp, out);
-    out = base32.fromString("ahbg====");
+    out = b32padding.fromString("ahbg====");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic3()
   {
     byte[] exp = {0x64, 0x65, 0x66};
-    byte[] out = base32.fromString("CHIMC");
+    byte[] out = b32padding.fromString("CHIMC");
     assertEquals(exp, out);
-    out = base32.fromString("chImC");
+    out = b32padding.fromString("chImC");
     assertEquals(exp, out);
-    out = base32.fromString("chimc===");
+    out = b32padding.fromString("chimc===");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic4()
   {
     byte[] exp = {(byte) 0xFC, 0, 0};
-    byte[] out = base32.fromString("vg000");
+    byte[] out = b32padding.fromString("vg000");
     assertEquals(exp, out);
-    out = base32.fromString("VG000===");
+    out = b32padding.fromString("VG000===");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic5()
   {
     byte[] exp = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    byte[] out = base32.fromString("VVVVU");
+    byte[] out = b32padding.fromString("VVVVU");
     assertEquals(out, exp);
   }
 
   public void test_fromString_basic6()
   {
     byte[] exp = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    byte[] out = base32.fromString("041061050O3GG28");
+    byte[] out = b32padding.fromString("041061050O3GG28");
     assertEquals(out, exp);
-    out = base32.fromString("041061050O3GG28=");
+    out = b32padding.fromString("041061050O3GG28=");
     assertEquals(out, exp);
   }
 
   public void test_fromString_invalid1()
   {
-    byte[] out = base32.fromString("000");
+    byte[] out = b32padding.fromString("000");
     assertNull(out);
   }
 
   public void test_fromString_invalid2()
   {
-    byte[] out = base32.fromString("000000");
+    byte[] out = b32padding.fromString("000000");
     assertNull(out);
   }
 
   public void test_fromString_invalid3()
   {
-    byte[] out = base32.fromString("0");
+    byte[] out = b32padding.fromString("0");
     assertNull(out);
   }
 
   public void test_fromString_invalid4()
   {
-    byte[] out = base32.fromString("WX");
+    byte[] out = b32padding.fromString("WX");
     assertNull(out);
   }
 
   public void test_fromString_invalid5()
   {
-    byte[] out = base32.fromString("00=");
+    byte[] out = b32padding.fromString("00=");
     assertNull(out);
   }
 

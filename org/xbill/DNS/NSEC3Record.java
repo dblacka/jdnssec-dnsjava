@@ -2,15 +2,10 @@
 
 package org.xbill.DNS;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.*;
+import java.security.*;
 
-import org.xbill.DNS.utils.base16;
-import org.xbill.DNS.utils.base32;
+import org.xbill.DNS.utils.*;
 
 /**
  * Next SECure name 3 - this record contains the next hashed name in an
@@ -24,393 +19,268 @@ import org.xbill.DNS.utils.base32;
  * @author David Blacka
  */
 
-public class NSEC3Record extends Record
+public class NSEC3Record extends Record {
+
+public static class Flags {
+	/**
+	 * NSEC3 flags identifiers.
+	 */
+
+	private Flags() {}
+
+	/** Unsigned delegation are not included in the NSEC3 chain.
+	 *
+	 */
+	public static final int OPT_OUT = 0x01;
+}
+
+public static final byte SHA1_DIGEST_ID = 1;
+
+private static final long serialVersionUID = -7123504635968932855L;
+
+private int hashAlg;
+private int flags;
+private int iterations;
+private byte [] salt;
+private byte [] next;
+private TypeBitmap types;
+private String comment;
+
+private static final base32 b32 = new base32(base32.Alphabet.BASE32HEX,
+					     false, false);
+
+NSEC3Record() {}
+
+Record getObject() {
+	return new NSEC3Record();
+}
+
+/**
+ * Creates an NSEC3 record from the given data.
+ * 
+ * @param name The ownername of the NSEC3 record (base32'd hash plus zonename).
+ * @param dclass The class.
+ * @param ttl The TTL.
+ * @param hashAlg The hash algorithm.
+ * @param flags The value of the flags field.
+ * @param iterations The number of hash iterations.
+ * @param salt The salt to use (may be null).
+ * @param next The next hash (may not be null).
+ * @param types The types present at the original ownername.
+ */
+public NSEC3Record(Name name, int dclass, long ttl, int hashAlg,
+		   int flags, int iterations, byte [] salt, byte [] next,
+		   int [] types)
 {
-  public static final byte OPT_OUT_FLAG = 0x01;
-  public static final byte SHA1_DIGEST_ID = 1;
-  public static final int  MAX_ITERATIONS = 1 << 16 - 1;
+	super(name, Type.NSEC3, dclass, ttl);
+	this.hashAlg = checkU8("hashAlg", hashAlg);
+	this.flags = checkU8("flags", flags);
+	this.iterations = checkU16("iterations", iterations);
 
-  private byte             hashAlg;
-  private byte             flags;
-  private int              iterations;
-  private byte[]           salt;
-  private byte[]           next;
-  private byte[]           owner;                       // cached numerical
-                                                        // owner value.
-  private int              types[];
-  private String           comment;                     // Optional comment�
+	if (salt != null) {
+		if (salt.length > 255)
+			throw new IllegalArgumentException("Invalid salt");
+		if (salt.length > 0) {
+			this.salt = new byte[salt.length];
+			System.arraycopy(salt, 0, this.salt, 0, salt.length);
+		}
+	}
 
-  NSEC3Record()
-  {
-  }
+	if (next.length > 255) {
+		throw new IllegalArgumentException("Invalid next hash");
+	}
+	this.next = new byte[next.length];
+	System.arraycopy(next, 0, this.next, 0, next.length);
+	this.types = new TypeBitmap(types);
+}
 
-  Record getObject()
-  {
-    return new NSEC3Record();
-  }
+/**
+ * Creates an NSEC3 record from the given data.
+ * 
+ * @param name The ownername of the NSEC3 record (base32'd hash plus zonename).
+ * @param dclass The class.
+ * @param ttl The TTL.
+ * @param hashAlg The hash algorithm.
+ * @param flags The value of the flags field.
+ * @param iterations The number of hash iterations.
+ * @param salt The salt to use (may be null).
+ * @param next The next hash (may not be null).
+ * @param types The types present at the original ownername.
+ * @param comment A comment to add to the end of the toString() output.
+ */
+public NSEC3Record(Name name, int dclass, long ttl, int hashAlg,
+    int flags, int iterations, byte [] salt, byte [] next,
+    int [] types, String comment) {
+  this(name, dclass, ttl, hashAlg, flags, iterations, salt, next, types);
+  this.comment = comment;
+}
 
-  /**
-   * Creates an NSEC3 record from the given data.
-   * 
-   * @param name The ownername of the NSEC3 record (base32'd hash plus
-   *          zonename).
-   * @param dclass The class.
-   * @param ttl The TTL.
-   * @param flags The value of the flags field.
-   * @param hashAlg The hash algorithm.
-   * @param iterations The number of hash iterations.
-   * @param salt The salt to use (may be null).
-   * @param next The next hash (may not be null).
-   * @param types The types present at the original ownername.
-   */
-  public NSEC3Record(Name name, int dclass, long ttl, byte hashAlg,
-      byte flags, int iterations, byte[] salt, byte[] next, int[] types)
-  {
-    super(name, Type.NSEC3, dclass, ttl);
-    this.hashAlg = hashAlg;
-    this.flags = flags;
-    this.iterations = iterations;
+void
+rrFromWire(DNSInput in) throws IOException {
+	hashAlg = in.readU8();
+	flags = in.readU8();
+	iterations = in.readU16();
 
-    if (this.iterations < 0 || this.iterations >= MAX_ITERATIONS)
-      throw new IllegalArgumentException("Invalid iterations value");
+	int salt_length = in.readU8();
+	if (salt_length > 0)
+		salt = in.readByteArray(salt_length);
+	else
+		salt = null;
 
-    if (salt != null)
-    {
-      if (salt.length > 255)
-        throw new IllegalArgumentException("Invalid salt length");
-      this.salt = new byte[salt.length];
-      System.arraycopy(salt, 0, this.salt, 0, salt.length);
-    }
+	int next_length = in.readU8();
+	next = in.readByteArray(next_length);
+	types = new TypeBitmap(in);
+}
 
-    if (next.length > 255)
-      throw new IllegalArgumentException("Invalid next length");
-    this.next = new byte[next.length];
-    System.arraycopy(next, 0, this.next, 0, next.length);
+void
+rrToWire(DNSOutput out, Compression c, boolean canonical) {
+	out.writeU8(hashAlg);
+	out.writeU8(flags);
+	out.writeU16(iterations);
 
-    for (int i = 0; i < types.length; i++)
-    {
-      Type.check(types[i]);
-    }
-    this.types = new int[types.length];
-    System.arraycopy(types, 0, this.types, 0, types.length);
-    Arrays.sort(this.types);
-  }
+	if (salt != null) {
+		out.writeU8(salt.length);
+		out.writeByteArray(salt);
+	} else
+		out.writeU8(0);
 
-  public NSEC3Record(Name name, int dclass, long ttl, byte hashAlg,
-      byte flags, int iterations, byte[] salt, byte[] next, int[] types,
-      String comment)
-  {
-    this(name, dclass, ttl, hashAlg, flags, iterations, salt, next, types);
-    this.comment = comment;
-  }
+	out.writeU8(next.length);
+	out.writeByteArray(next);
+	types.toWire(out);
+}
 
-  private int[] listToArray(List list)
-  {
-    int size = list.size();
-    int[] array = new int[size];
-    for (int i = 0; i < size; i++)
-    {
-      array[i] = ((Integer) list.get(i)).intValue();
-    }
-    return array;
-  }
+void
+rdataFromString(Tokenizer st, Name origin) throws IOException {
+	hashAlg = st.getUInt8();
+	flags = st.getUInt8();
+	iterations = st.getUInt16();
 
-  void rrFromWire(DNSInput in) throws IOException
-  {
-    hashAlg = (byte) in.readU8();
-    flags = (byte) in.readU8();
-    iterations = in.readU16();
-    int salt_length = in.readU8();
-    if (salt_length > 0)
-      salt = in.readByteArray(salt_length);
-    else
-      salt = null;
+	String s = st.getString();
+	if (s.equals("-"))
+		salt = null;
+	else {
+		st.unget();
+		salt = st.getHexString();
+		if (salt.length > 255)
+			throw st.exception("salt value too long");
+	}
 
-    int next_length = in.readU8();
-    if (next_length > 0)
-      next = in.readByteArray(next_length);
-    else
-      next = null;
+	next = st.getBase32String(b32);
+	types = new TypeBitmap(st);
+}
 
-    // Read typemap.
-    int lastbase = -1;
-    List list = new ArrayList();
-    while (in.remaining() > 0)
-    {
-      if (in.remaining() < 2)
-        throw new WireParseException("invalid bitmap descriptor");
-      int mapbase = in.readU8();
-      if (mapbase < lastbase)
-        throw new WireParseException("invalid ordering");
-      int maplength = in.readU8();
-      if (maplength > in.remaining())
-        throw new WireParseException("invalid bitmap");
-      for (int i = 0; i < maplength; i++)
-      {
-        int current = in.readU8();
-        if (current == 0) continue;
-        for (int j = 0; j < 8; j++)
-        {
-          if ((current & (1 << (7 - j))) == 0) continue;
-          int typecode = mapbase * 256 + +i * 8 + j;
-          list.add(Mnemonic.toInteger(typecode));
-        }
-      }
-    }
-    types = listToArray(list);
-  }
+/** Converts rdata to a String */
+String
+rrToString() {
+	StringBuffer sb = new StringBuffer();
+	sb.append(hashAlg);
+	sb.append(' ');
+	sb.append(flags);
+	sb.append(' ');
+	sb.append(iterations);
+	sb.append(' ');
+	if (salt == null)
+		sb.append('-');
+	else
+		sb.append(base16.toString(salt));
+	sb.append(' ');
+	sb.append(b32.toString(next));
 
-  void rdataFromString(Tokenizer st, Name origin) throws IOException
-  {
-    // Note that the hash alg can either be a number or a mnemonic
-    // Well, it can't really be a mnemonic, but we support it anyway.
-    String hashAlgStr = st.getString();
-    if (Character.isDigit(hashAlgStr.charAt(0)))
-    {
-      try
-      {
-        hashAlg = (byte) Long.parseLong(hashAlgStr);
-      }
-      catch (NumberFormatException e)
-      {
-        throw new IOException("expected an integer");
-      }
-    }
-    else
-    {
-      hashAlg = mnemonicToAlg(hashAlgStr);
-    }
+	if (!types.empty()) {
+		sb.append(' ');
+		sb.append(types.toString());
+	}
 
-    flags = (byte) st.getUInt8();
-    iterations = st.getUInt16();
-    
-    String salt_hex = st.getString();
-    if (salt_hex.equals("-") || salt_hex.equals("0"))
-    {
-      salt = null;
-    }
-    else
-    {
-      salt = base16.fromString(salt_hex);
-      if (salt == null)
-        throw st.exception("Invalid salt value: " + salt_hex);
-      if (salt.length > 255)
-        throw st.exception("Invalid salt value (too long): " + salt_hex);
-    }
+	if (comment != null) { 
+	  sb.append(" ; ");
+	  sb.append(comment);
+	}
+	
+	return sb.toString();
+}
 
-    String next_base32 = st.getString();
-    next = base32.fromString(next_base32);
+/** Returns the hash algorithm */
+public int
+getHashAlgorithm() {
+	return hashAlg;
+}
 
-    List list = new ArrayList();
-    while (true)
-    {
-      Tokenizer.Token t = st.get();
-      if (!t.isString()) break;
-      int type = Type.value(t.value);
-      if (type < 0)
-      {
-        throw st.exception("Invalid type: " + t.value);
-      }
-      list.add(Mnemonic.toInteger(type));
-    }
-    st.unget();
-    types = listToArray(list);
-    Arrays.sort(types);
-  }
+/** Returns the flags */
+public int
+getFlags() {
+	return flags;
+}
 
-  /** Converts rdata to a String */
-  String rrToString()
-  {
-    StringBuffer sb = new StringBuffer();
-    sb.append(hashAlg);
-    sb.append(' ');
-    sb.append(flags);
-    sb.append(' ');
-    sb.append(iterations);
-    sb.append(' ');
-    sb.append(salt == null ? "-" : base16.toString(salt));
-    sb.append(' ');
-    sb.append(base32.toString(next).toLowerCase());
+/** Returns the number of iterations */
+public int
+getIterations() {
+	return iterations;
+}
 
-    for (int i = 0; i < types.length; i++)
-    {
-      sb.append(" ");
-      sb.append(Type.string(types[i]));
-    }
-    if (comment != null)
-    {
-      sb.append(" ; ");
-      sb.append(comment);
-    }
+/** Returns the salt */
+public byte []
+getSalt()
+{
+	return salt;
+}
 
-    return sb.toString();
-  }
-
-  public byte[] getOwner()
-  {
-    if (owner == null)
-    {
-      owner = base32.fromString(getName().getLabelString(0));
-    }
-    return owner;
-  }
-
-  /** Returns the next hash */
-  public byte[] getNext()
-  {
-    return next;
-  }
-
-  public byte getFlags()
-  {
-    return flags;
-  }
-  
-  public boolean getOptInFlag()
-  {
-    return (flags & OPT_OUT_FLAG) != 0;
-  }
-
-  public byte getHashAlgorithm()
-  {
-    return hashAlg;
-  }
-
-  public int getIterations()
-  {
-    return iterations;
-  }
-
-  public byte[] getSalt()
-  {
-    return salt;
-  }
+/** Returns the next hash */
+public byte []
+getNext() {
+	return next;
+}
 
   /** Returns the set of types defined for this name */
-  public int[] getTypes()
-  {
-    int[] array = new int[types.length];
-    System.arraycopy(types, 0, array, 0, types.length);
-    return array;
-  }
+public int []
+getTypes() {
+	return types.toArray();
+}
 
-  /** Returns whether a specific type is in the set of types. */
-  public boolean hasType(int type)
-  {
-    return (Arrays.binarySearch(types, type) >= 0);
-  }
+/** Returns whether a specific type is in the set of types. */
+public boolean
+hasType(int type)
+{
+	return types.contains(type);
+}
 
-  static void mapToWire(DNSOutput out, int[] array, int mapbase,
-      int mapstart, int mapend)
-  {
-    int mapmax = array[mapend - 1] & 0xFF;
-    int maplength = (mapmax / 8) + 1;
-    int[] map = new int[maplength];
-    out.writeU8(mapbase);
-    out.writeU8(maplength);
-    for (int j = mapstart; j < mapend; j++)
-    {
-      int typecode = array[j];
-      map[(typecode & 0xFF) / 8] |= (1 << (7 - typecode % 8));
-    }
-    for (int j = 0; j < maplength; j++)
-    {
-      out.writeU8(map[j]);
-    }
-  }
+static byte []
+hashName(Name name, int hashAlg, int iterations, byte [] salt)
+throws NoSuchAlgorithmException
+{
+	MessageDigest digest;
+	switch (hashAlg) {
+	case SHA1_DIGEST_ID:
+		digest = MessageDigest.getInstance("sha-1");
+		break;
+	default:
+		throw new NoSuchAlgorithmException("Unknown NSEC3 algorithm" +
+						   "identifier: " +
+						   hashAlg);
+	}
+	byte [] hash = null;
+	for (int i = 0; i <= iterations; i++) {
+		digest.reset();
+		if (i == 0)
+			digest.update(name.toWireCanonical());
+		else
+			digest.update(hash);
+		if (salt != null)
+			digest.update(salt);
+		hash = digest.digest();
+	}
+	return hash;
+}
 
-  void rrToWire(DNSOutput out, Compression c, boolean canonical)
-  {
-    out.writeU8(hashAlg);
-    out.writeU8(flags);
-    out.writeU16(iterations);
-    out.writeU8(salt == null ? 0 : salt.length);
-    if (salt != null) out.writeByteArray(salt);
-    out.writeU8(next.length);
-    out.writeByteArray(next);
+/**
+ * Hashes a name with the parameters of this NSEC3 record.
+ * @param name The name to hash
+ * @return The hashed version of the name
+ * @throws NoSuchAlgorithmException The hash algorithm is unknown.
+ */
+public byte []
+hashName(Name name) throws NoSuchAlgorithmException
+{
+	return hashName(name, hashAlg, iterations, salt);
+}
 
-    if (types.length == 0) return;
-    int mapbase = -1;
-    int mapstart = -1;
-    for (int i = 0; i < types.length; i++)
-    {
-      int base = types[i] >> 8;
-      if (base == mapbase) continue;
-      if (mapstart >= 0)
-      {
-        mapToWire(out, types, mapbase, mapstart, i);
-      }
-      mapbase = base;
-      mapstart = i;
-    }
-    mapToWire(out, types, mapbase, mapstart, types.length);
-  }
-
-  /**
-   * Calculate an NSEC3 hash based on a DNS name and NSEC3 hash parameters.
-   * 
-   * @param n The name to hash.
-   * @param hash_algorithm The hash algorithm to use.
-   * @param iterations The number of iterations to do.
-   * @param salt The salt to use.
-   * @return The calculated hash as a byte array.
-   * @throws NoSuchAlgorithmException If the hash algorithm is unrecognized.
-   */
-  public static byte[] hash(Name n, byte hash_algorithm, int iterations,
-      byte[] salt) throws NoSuchAlgorithmException
-  {
-    MessageDigest md;
-
-    switch (hash_algorithm)
-    {
-      case SHA1_DIGEST_ID :
-        md = MessageDigest.getInstance("SHA1");
-        break;
-      default :
-        throw new NoSuchAlgorithmException(
-            "Unknown NSEC3 algorithm identifier: " + hash_algorithm);
-    }
-
-    // Construct our wire form.
-    byte[] wire_name = n.toWireCanonical();
-    byte[] res = wire_name; // for the first iteration.
-    for (int i = 0; i <= iterations; i++)
-    {
-      // concatinate the salt, if it exists.
-      if (salt != null)
-      {
-        byte[] concat = new byte[res.length + salt.length];
-        System.arraycopy(res, 0, concat, 0, res.length);
-        System.arraycopy(salt, 0, concat, res.length, salt.length);
-        res = concat;
-      }
-      res = md.digest(res);
-    }
-
-    return res;
-  }
-
-  public static byte mnemonicToAlg(String mnemonic) throws IOException
-  {
-    // FIXME: this should probably use a table.
-
-    if (mnemonic.equalsIgnoreCase("SHA1")
-        || mnemonic.equalsIgnoreCase("SHA-1"))
-    {
-      return SHA1_DIGEST_ID;
-    }
-
-    throw new IOException("unknown hash algorithm");
-  }
-
-  public static String algToMnemonic(byte hashAlg)
-  {
-    switch (hashAlg)
-    {
-      case SHA1_DIGEST_ID :
-        return "SHA-1";
-      default :
-        return Byte.toString(hashAlg);
-    }
-  }
 }

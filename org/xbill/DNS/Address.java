@@ -4,7 +4,6 @@ package org.xbill.DNS;
 
 import java.net.*;
 import java.net.Inet6Address;
-import java.util.*;
 
 /**
  * Routines dealing with IP addresses.  Includes functions similar to
@@ -72,8 +71,6 @@ parseV4(String s) {
 
 private static byte []
 parseV6(String s) {
-	boolean parsev4 = false;
-	List l = new ArrayList();
 	int range = -1;
 	byte [] data = new byte[16];
 
@@ -115,7 +112,6 @@ parseV6(String s) {
 		}
 
 		if (tokens[i].indexOf('.') >= 0) {
-			parsev4 = true;
 			// An IPv4 address must be the last component
 			if (i < last)
 				return null;

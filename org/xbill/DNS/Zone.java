@@ -12,7 +12,9 @@ import java.util.*;
  * @author Brian Wellington
  */
 
-public class Zone {
+public class Zone implements Serializable {
+
+private static final long serialVersionUID = -9220510891189510942L;
 
 /** A primary zone */
 public static final int PRIMARY = 1;
@@ -21,7 +23,6 @@ public static final int PRIMARY = 1;
 public static final int SECONDARY = 2;
 
 private Map data;
-private int type;
 private Name origin;
 private Object originNode;
 private int dclass = DClass.IN;
@@ -36,7 +37,9 @@ class ZoneIterator implements Iterator {
 	private boolean wantLastSOA;
 
 	ZoneIterator(boolean axfr) {
-		zentries = data.entrySet().iterator();
+		synchronized (Zone.this) {
+			zentries = data.entrySet().iterator();
+		}
 		wantLastSOA = axfr;
 		RRset [] sets = allRRsets(originNode);
 		current = new RRset[sets.length];
@@ -61,7 +64,7 @@ class ZoneIterator implements Iterator {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		if (current == null && wantLastSOA) {
+		if (current == null) {
 			wantLastSOA = false;
 			return oneRRset(originNode, Type.SOA);
 		}
@@ -130,7 +133,6 @@ maybeAddRecord(Record record) throws IOException {
 public
 Zone(Name zone, String file) throws IOException {
 	data = new HashMap();
-	type = PRIMARY;
 
 	if (zone == null)
 		throw new IllegalArgumentException("no zone name specified");
@@ -152,7 +154,6 @@ Zone(Name zone, String file) throws IOException {
 public
 Zone(Name zone, Record [] records) throws IOException {
 	data = new HashMap();
-	type = PRIMARY;
 
 	if (zone == null)
 		throw new IllegalArgumentException("no zone name specified");
@@ -165,17 +166,16 @@ Zone(Name zone, Record [] records) throws IOException {
 private void
 fromXFR(ZoneTransferIn xfrin) throws IOException, ZoneTransferException {
 	data = new HashMap();
-	type = SECONDARY;
 
-	if (!xfrin.isAXFR())
-		throw new IllegalArgumentException("zones can only be " +
-						   "created from AXFRs");
 	origin = xfrin.getName();
 	List records = xfrin.run();
 	for (Iterator it = records.iterator(); it.hasNext(); ) {
 		Record record = (Record) it.next();
 		maybeAddRecord(record);
 	}
+	if (!xfrin.isAXFR())
+		throw new IllegalArgumentException("zones can only be " +
+						   "created from AXFRs");
 	validate();
 }
 
@@ -493,9 +493,10 @@ removeRecord(Record r) {
 		RRset rrset = findRRset(name, rtype);
 		if (rrset == null)
 			return;
-		rrset.deleteRR(r);
-		if (rrset.size() == 0)
+		if (rrset.size() == 1 && rrset.first().equals(r))
 			removeRRset(name, rtype);
+		else
+			rrset.deleteRR(r);
 	}
 }
 
@@ -534,7 +535,7 @@ nodeToString(StringBuffer sb, Object node) {
 /**
  * Returns the contents of the Zone in master file format.
  */
-public String
+public synchronized String
 toMasterFile() {
 	Iterator zentries = data.entrySet().iterator();
 	StringBuffer sb = new StringBuffer();

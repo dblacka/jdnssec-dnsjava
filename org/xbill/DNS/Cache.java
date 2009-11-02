@@ -29,13 +29,15 @@ private static int
 limitExpire(long ttl, long maxttl) {
 	if (maxttl >= 0 && maxttl < ttl)
 		ttl = maxttl;
-	int expire = (int)((System.currentTimeMillis() / 1000) + ttl);
+	long expire = (System.currentTimeMillis() / 1000) + ttl;
 	if (expire < 0 || expire > Integer.MAX_VALUE)
 		return Integer.MAX_VALUE;
-	return expire;
+	return (int)expire;
 }
 
 private static class CacheRRset extends RRset implements Element {
+	private static final long serialVersionUID = 5971755205903597024L;
+	
 	int credibility;
 	int expire;
 
@@ -78,7 +80,6 @@ private static class CacheRRset extends RRset implements Element {
 private static class NegativeElement implements Element {
 	int type;
 	Name name;
-	SOARecord soa;
 	int credibility;
 	int expire;
 
@@ -88,7 +89,6 @@ private static class NegativeElement implements Element {
 	{
 		this.name = name;
 		this.type = type;
-		this.soa = soa;
 		long cttl = 0;
 		if (soa != null)
 			cttl = soa.getMinimum();
@@ -405,7 +405,6 @@ lookup(Name name, int type, int minCred) {
 	int labels;
 	int tlabels;
 	Element element;
-	CacheRRset crrset;
 	Name tname;
 	Object types;
 	SetResponse sr;
@@ -602,7 +601,6 @@ addMessage(Message in) {
 	int qclass;
 	int cred;
 	int rcode = in.getHeader().getRcode();
-	boolean haveAnswer = false;
 	boolean completed = false;
 	RRset [] answers, auth, addl;
 	SetResponse response = null;
@@ -633,7 +631,6 @@ addMessage(Message in) {
 		{
 			addRRset(answers[i], cred);
 			completed = true;
-			haveAnswer = true;
 			if (curname == qname) {
 				if (response == null)
 					response = new SetResponse(
@@ -649,7 +646,6 @@ addMessage(Message in) {
 							   answers[i]);
 			cname = (CNAMERecord) answers[i].first();
 			curname = cname.getTarget();
-			haveAnswer = true;
 		} else if (type == Type.DNAME && curname.subdomain(name)) {
 			DNAMERecord dname;
 			addRRset(answers[i], cred);
@@ -663,7 +659,6 @@ addMessage(Message in) {
 			catch (NameTooLongException e) {
 				break;
 			}
-			haveAnswer = true;
 		}
 	}
 
@@ -680,7 +675,7 @@ addMessage(Message in) {
 	if (!completed) {
 		/* This is a negative response or a referral. */
 		int cachetype = (rcode == Rcode.NXDOMAIN) ? 0 : qtype;
-		if (soa != null || ns == null) {
+		if (rcode == Rcode.NXDOMAIN || soa != null || ns == null) {
 			/* Negative response */
 			cred = getCred(Section.AUTHORITY, isAuth);
 			SOARecord soarec = null;
@@ -695,7 +690,7 @@ addMessage(Message in) {
 					responseType = SetResponse.NXRRSET;
 				response = SetResponse.ofType(responseType);
 			}
-			/* NXT records are not cached yet. */
+			/* DNSSEC records are not cached. */
 		} else {
 			/* Referral response */
 			cred = getCred(Section.AUTHORITY, isAuth);

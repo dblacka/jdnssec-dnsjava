@@ -7,8 +7,9 @@ import org.xbill.DNS.utils.*;
 
 /**
  * DLV - contains a Delegation Lookaside Validation record, which acts
- * as the equivalent of a DS record in the lookaside zone.
+ * as the equivalent of a DS record in a lookaside zone.
  * @see DNSSEC
+ * @see DSRecord
  *
  * @author David Blacka
  * @author Brian Wellington
@@ -17,6 +18,9 @@ import org.xbill.DNS.utils.*;
 public class DLVRecord extends Record {
 
 public static final byte SHA1_DIGEST_ID = 1;
+public static final byte SHA256_DIGEST_ID = 2;
+
+private static final long serialVersionUID = 1960742375677534148L;
 
 private int footprint;
 private int alg;
@@ -27,7 +31,7 @@ DLVRecord() {}
 
 Record
 getObject() {
-        return new DLVRecord();
+	return new DLVRecord();
 }
 
 /**
@@ -39,29 +43,29 @@ getObject() {
  */
 public
 DLVRecord(Name name, int dclass, long ttl, int footprint, int alg,
-         int digestid, byte []  digest)
+	  int digestid, byte [] digest)
 {
-        super(name, Type.DLV, dclass, ttl);
-        this.footprint = checkU16("footprint", footprint);
-        this.alg = checkU8("alg", alg);
-        this.digestid = checkU8("digestid", digestid);
-        this.digest = digest;
+	super(name, Type.DLV, dclass, ttl);
+	this.footprint = checkU16("footprint", footprint);
+	this.alg = checkU8("alg", alg);
+	this.digestid = checkU8("digestid", digestid);
+	this.digest = digest;
 }
 
 void
 rrFromWire(DNSInput in) throws IOException {
-        footprint = in.readU16();
-        alg = in.readU8();
-        digestid = in.readU8();
-        digest = in.readByteArray();
+	footprint = in.readU16();
+	alg = in.readU8();
+	digestid = in.readU8();
+	digest = in.readByteArray();
 }
 
 void
 rdataFromString(Tokenizer st, Name origin) throws IOException {
-        footprint = st.getUInt16();
-        alg = st.getUInt8();
-        digestid = st.getUInt8();
-        digest = st.getHex();
+	footprint = st.getUInt16();
+	alg = st.getUInt8();
+	digestid = st.getUInt8();
+	digest = st.getHex();
 }
 
 /**
@@ -69,26 +73,26 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
  */
 String
 rrToString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append(footprint);
-        sb.append(" ");
-        sb.append(alg);
-        sb.append(" ");
-        sb.append(digestid);
-        if (digest != null) {
-                sb.append(" ");
-                sb.append(base16.toString(digest));
-        }
+	StringBuffer sb = new StringBuffer();
+	sb.append(footprint);
+	sb.append(" ");
+	sb.append(alg);
+	sb.append(" ");
+	sb.append(digestid);
+	if (digest != null) {
+		sb.append(" ");
+		sb.append(base16.toString(digest));
+	}
 
-        return sb.toString();
-}       
+	return sb.toString();
+}
 
 /**
  * Returns the key's algorithm.
  */
 public int
 getAlgorithm() {
-        return alg;
+	return alg;
 }
 
 /**
@@ -97,7 +101,7 @@ getAlgorithm() {
 public int
 getDigestID()
 {
-        return digestid;
+	return digestid;
 }
   
 /**
@@ -105,7 +109,7 @@ getDigestID()
  */
 public byte []
 getDigest() {
-        return digest;
+	return digest;
 }
 
 /**
@@ -113,16 +117,16 @@ getDigest() {
  */
 public int
 getFootprint() {
-        return footprint;
+	return footprint;
 }
 
 void
 rrToWire(DNSOutput out, Compression c, boolean canonical) {
-        out.writeU16(footprint);
-        out.writeU8(alg);
-        out.writeU8(digestid);
-        if (digest != null)
-                out.writeByteArray(digest);
+	out.writeU16(footprint);
+	out.writeU8(alg);
+	out.writeU8(digestid);
+	if (digest != null)
+		out.writeByteArray(digest);
 }
 
 }

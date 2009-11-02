@@ -14,15 +14,13 @@ import org.xbill.DNS.utils.*;
  * @author Brian Wellington
  */
 
-public abstract class Record implements Cloneable, Comparable {
+public abstract class Record implements Cloneable, Comparable, Serializable {
+
+private static final long serialVersionUID = 2694906050116005466L;
 
 protected Name name;
 protected int type, dclass;
 protected long ttl;
-
-private static final Record unknownRecord = new UNKRecord();
-private static final Class [] emptyClassArray = new Class[0];
-private static final Object [] emptyObjectArray = new Object[0];
 
 private static final DecimalFormat byteFormat = new DecimalFormat();
 
@@ -81,7 +79,6 @@ newRecord(Name name, int type, int dclass, long ttl, int length, DNSInput in)
 throws IOException
 {
 	Record rec;
-	int recstart;
 	rec = getEmptyRecord(name, type, dclass, ttl, in != null);
 	if (in != null) {
 		if (in.remaining() < length)
@@ -415,7 +412,7 @@ byteArrayToString(byte [] array, boolean quote) {
 		if (b < 0x20 || b >= 0x7f) {
 			sb.append('\\');
 			sb.append(byteFormat.format(b));
-		} else if (b == '"' || b == ';' || b == '\\') {
+		} else if (b == '"' || b == '\\') {
 			sb.append('\\');
 			sb.append((char)b);
 		} else

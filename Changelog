@@ -1,3 +1,89 @@
+9/25/2009
+	- 2.0.7 released
+	- Add support for detecting the configured nameservers on the Android
+	  platform.  (patch from Arnt Gulbrandsen <arnt@gulbrandsen.priv.no>)
+
+9/16/2009
+	- When determining the nameservers to use, if the
+	  sun.net.dns.ResolverConfiguration class returns an empty list, ignore
+	  it. (based on an anonymous patch).
+	- Make the Name, Record (and all subclasses), RRset, and Zone classes
+	  implement Serializable.
+	  (based on a patch from Patrick <psp294@users.sourceforge.net>)
+
+9/15/2009
+	- Add a constant for the REVOKE DNSKEY flag.
+	  (patch from Wolfgang Nagele <dreamguard@users.sourceforge.net>)
+	- ReverseMap.fromAddress(String) should support both IPv4 and IPv6
+	  addresses.
+	  (reported by Stephan Fuhrmann <stfu1und1@users.sourceforge.net>)
+
+8/08/2009
+	- The escaping code for text strings should not escape semicolons.
+
+6/23/2009
+	- DNSSEC signature validation incorrectly used the TTL of the records
+	  being verified, not the original TTL from the RRSIG record, which
+	  caused failures when verifying records returned by a caching server.
+	  (reported by Samuel Benz <samuel.benz@switch.ch>)
+
+6/15/2009
+	- Change the ResolverConfig.refresh() method to only synchronize the
+	  assignment to currentConfig, not the code which determines the new
+	  configuration.
+
+6/12/2009
+	- The TSIG verification routines (TSIG.verify,
+	  TSIG.StreamVerifier.verify() now update the Message object with the
+	  status of the verification in addition to returning the status.
+	
+6/03/2009
+	- The lists of servers and searchlist entries in ResolverConfig should
+	  not be static.
+	  (Isabelle Dalmasso <isa@8x8.com>)
+
+5/28/2009
+	- The canonical form of an NSEC record was incorrectly computed - the
+	  next name should not have its case changed.
+	  (David Blacka <davidb@verisign.com>)
+
+	- Add support for NSEC3, NSEC3PARAM, and DLV records.
+	  (based on a patch from David Blacka <davidb@verisign.com>)
+
+9/17/2008
+	- Fix LOC record rounding.
+	  (reported by Klaus Malorny <Klaus.Malorny@knipp.de>)
+
+8/22/2008
+	- Type 4 NXDOMAIN responses were incorrectly cached as referrals.
+	  (reported by Luis Silva <luisfilsilva@gmail.com>)
+
+8/06/2008
+	- Randomize the UDP source ports for outgoing queries.
+	  (based on a patch from Derek Morr <derekmorr@psu.edu>)
+
+4/25/2008
+	- Add support for the DHCID record.
+
+4/18/2008
+	- The prior change to allow creating Zones from AXFR-style IXFR
+	  ZoneTransferIn responses didn't work.
+	- Update the service provider to work with Java 1.6 and earlier
+	  versions. (patch from <thelian@users.sourceforge.net>)
+
+2/19/2008
+	- The Zone.removeRecord() method threw an exception if there were no
+	  other records in the same RRset.
+	  (reported by Yoyo Chen <yoyochen@sinter.com.tw>)
+
+	- Parsing and formatting LOC records should not depend on the current
+	  locale. (reported by Klaus Malorny <Klaus.Malorny@knipp.de>)
+
+1/31/2008
+	- When converting messages to wire format, don't include name
+	  compression pointers greater than 2^14 - 1.
+	  (reported by Carole Gill <cgill@silverspringnet.com>)
+
 1/24/2008
 	- 2.0.6 released
 

@@ -14,11 +14,13 @@ import org.xbill.DNS.utils.*;
 
 public class IPSECKEYRecord extends Record {
 
+private static final long serialVersionUID = 3050449702765909687L;
+
 public static class Algorithm {
 	private Algorithm() {}
 
-	public static final int RSA = 1;
-	public static final int DSS = 2;
+	public static final int DSA = 1;
+	public static final int RSA = 2;
 }
 
 public static class Gateway {

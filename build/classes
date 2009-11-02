@@ -1,0 +1,8 @@
+tree ed4bd9eafc92e513dd4d4db13ff974bee63e03f1
+parent 9cecc1061571a401e270e6884a4f4c4771c6b5b9
+author davidb <davidb@4cbd57fe-54e5-0310-bd9a-f30fe5ea5e6e> 1243352623 +0000
+committer davidb <davidb@4cbd57fe-54e5-0310-bd9a-f30fe5ea5e6e> 1243352623 +0000
+
+add a (minimal) DHCID record implementation
+
+git-svn-id: https://svn.verisignlabs.com/main/dnssec/dnsjava/trunk@2261 4cbd57fe-54e5-0310-bd9a-f30fe5ea5e6e

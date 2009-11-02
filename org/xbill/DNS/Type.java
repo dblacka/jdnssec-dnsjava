@@ -153,13 +153,13 @@ public static final int NSEC		= 47;
 /** DNSSEC Key */
 public static final int DNSKEY		= 48;
 
-/** DHCp IDentifier */
-public static final int DHCID       = 49;
+/** Dynamic Host Configuration Protocol (DHCP) ID */
+public static final int DHCID		= 49;
 
 /** Next SECure, 3rd edition, RFC 5155 */
-public static final int NSEC3           = 50;
+public static final int NSEC3		= 50;
 
-public static final int NSEC3PARAM      = 51;
+public static final int NSEC3PARAM	= 51;
 
 /** Sender Policy Framework (experimental) */
 public static final int SPF		= 99;
@@ -185,8 +185,8 @@ public static final int MAILA		= 254;
 /** Matches any type */
 public static final int ANY		= 255;
 
-/** DNSSEC Lookaside Validation records. */
-public static final int DLV             = 32769; // assigned by RFC 4431
+/** DNSSEC Lookaside Validation, RFC 4431 . */
+public static final int DLV		= 32769;
 
 
 private static class TypeMnemonic extends Mnemonic {
@@ -268,6 +268,8 @@ static {
 	types.add(NSEC, "NSEC", new NSECRecord());
 	types.add(DNSKEY, "DNSKEY", new DNSKEYRecord());
 	types.add(DHCID, "DHCID", new DHCIDRecord());
+	types.add(NSEC3, "NSEC3", new NSEC3Record());
+	types.add(NSEC3PARAM, "NSEC3PARAM", new NSEC3PARAMRecord());
 	types.add(SPF, "SPF", new SPFRecord());
 	types.add(TKEY, "TKEY", new TKEYRecord());
 	types.add(TSIG, "TSIG", new TSIGRecord());
@@ -276,16 +278,18 @@ static {
 	types.add(MAILB, "MAILB");
 	types.add(MAILA, "MAILA");
 	types.add(ANY, "ANY");
-    types.add(DLV, "DLV", new DLVRecord());
-    types.add(NSEC3, "NSEC3", new NSEC3Record());
-    types.add(NSEC3PARAM, "NSEC3PARAM", new NSEC3PARAMRecord());
+	types.add(DLV, "DLV", new DLVRecord());
 }
 
 private
 Type() {
 }
 
-static void
+/**
+ * Checks that a numeric Type is valid.
+ * @throws InvalidTypeException The type is out of range.
+ */
+public static void
 check(int val) {
 	if (val < 0 || val > 0xFFFF)
 		throw new InvalidTypeException(val);

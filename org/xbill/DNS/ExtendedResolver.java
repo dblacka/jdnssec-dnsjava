@@ -66,11 +66,13 @@ private static class Resolution implements ResolverListener {
 			inprogress[n] = resolvers[n].sendAsync(query, this);
 		}
 		catch (Throwable t) {
-			thrown = t;
-			done = true;
-			if (listener == null) {
-				notifyAll();
-				return;
+			synchronized (this) {
+				thrown = t;
+				done = true;
+				if (listener == null) {
+					notifyAll();
+					return;
+				}
 			}
 		}
 	}
@@ -99,18 +101,16 @@ private static class Resolution implements ResolverListener {
 			 */
 			handleException(inprogress[0], e);
 		}
-		if (!done) {
-			/*
-			 * Wait for a successful response or for each
-			 * subresolver to fail.
-			 */
-			synchronized (this) {
-				while (!done) {
-					try {
-						wait();
-					}
-					catch (InterruptedException e) {
-					}
+		/*
+		 * Wait for a successful response or for each
+		 * subresolver to fail.
+		 */
+		synchronized (this) {
+			while (!done) {
+				try {
+					wait();
+				}
+				catch (InterruptedException e) {
 				}
 			}
 		}
@@ -125,7 +125,7 @@ private static class Resolution implements ResolverListener {
 			throw (Error) thrown;
 		else
 			throw new IllegalStateException
-						("ExtendedResolver failure");
+				("ExtendedResolver failure");
 	}
 
 	/* Start an asynchronous resolution */
@@ -177,7 +177,6 @@ private static class Resolution implements ResolverListener {
 			if (n == inprogress.length)
 				return;
 			boolean startnext = false;
-			boolean waiting = false;
 			/*
 			 * If this is the first response from server n, 
 			 * we should start sending queries to server n + 1.

@@ -13,6 +13,8 @@ import java.text.*;
 
 public class LOCRecord extends Record {
 
+private static final long serialVersionUID = 9058224788126750409L;
+
 private static NumberFormat w2, w3;
 
 private long size, hPrecision, vPrecision;
@@ -20,12 +22,10 @@ private long latitude, longitude, altitude;
 
 static {
 	w2 = new DecimalFormat();
-	w2.setMaximumFractionDigits(2);
-	w2.setGroupingUsed(false);
+	w2.setMinimumIntegerDigits(2);
 
 	w3 = new DecimalFormat();
-	w3.setMaximumFractionDigits(3);
-	w3.setGroupingUsed(false);
+	w3.setMinimumIntegerDigits(3);
 }
 
 LOCRecord() {}
@@ -73,6 +73,21 @@ rrFromWire(DNSInput in) throws IOException {
 	altitude = in.readU32();
 }
 
+private double
+parseFixedPoint(String s)
+{
+	if (s.matches("^\\d+$"))
+		return Integer.parseInt(s);
+	else if (s.matches("^\\d+\\.\\d*$")) {
+		String [] parts = s.split("\\.");
+		double value = Integer.parseInt(parts[0]);
+		double fraction = Integer.parseInt(parts[1]);
+		int digits = parts[1].length();
+		return value + (fraction / Math.pow(10, digits));
+	} else
+		throw new NumberFormatException();
+}
+
 private long
 parsePosition(Tokenizer st, String type) throws IOException {
 	boolean isLatitude = type.equals("latitude");
@@ -91,7 +106,7 @@ parsePosition(Tokenizer st, String type) throws IOException {
 		if (min < 0 || min > 59)
 			throw st.exception("Invalid LOC " + type + " minutes");
 		s = st.getString();
-		sec = Double.parseDouble(s);
+		sec = parseFixedPoint(s);
 		if (sec < 0 || sec >= 60)
 			throw st.exception("Invalid LOC " + type + " seconds");
 		s = st.getString();
@@ -130,7 +145,7 @@ throws IOException
 	if (s.length() > 1 && s.charAt(s.length() - 1) == 'm')
 		s = s.substring(0, s.length() - 1);
 	try {
-		long value = (long)(100 * new Double(s).doubleValue());
+		long value = (long)(100 * parseFixedPoint(s));
 		if (value < min || value > max)
 			throw st.exception("Invalid LOC " + type);
 		return value;
@@ -142,10 +157,6 @@ throws IOException
 
 void
 rdataFromString(Tokenizer st, Name origin) throws IOException {
-	String s = null;
-	int deg, min;
-	double sec;
-
 	latitude = parsePosition(st, "latitude");
 	longitude = parsePosition(st, "longitude");
 	altitude = parseDouble(st, "altitude", true,
@@ -155,6 +166,18 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
 				 0, 9000000000L, 1000000);
 	vPrecision = parseDouble(st, "vertical precision", false,
 				 0, 9000000000L, 1000);
+}
+
+private void
+renderFixedPoint(StringBuffer sb, NumberFormat formatter, long value,
+		 long divisor)
+{
+	sb.append(value / divisor);
+	value %= divisor;
+	if (value != 0) {
+		sb.append(".");
+		sb.append(formatter.format(value));
+	}
 }
 
 private String
@@ -177,7 +200,7 @@ positionToString(long value, char pos, char neg) {
 	temp = temp % (60 * 1000);
 	sb.append(" ");
 
-	sb.append(w3.format(((double)temp) / 1000)); /* seconds */
+	renderFixedPoint(sb, w3, temp, 1000); /* seconds */
 	sb.append(" ");
 
 	sb.append(direction);
@@ -190,8 +213,6 @@ positionToString(long value, char pos, char neg) {
 String
 rrToString() {
 	StringBuffer sb = new StringBuffer();
-	long temp;
-	char direction;
 
 	/* Latitude */
 	sb.append(positionToString(latitude, 'N', 'S'));
@@ -202,19 +223,19 @@ rrToString() {
 	sb.append(" ");
 
 	/* Altitude */
-	sb.append(w2.format((double)(altitude - 10000000)/100));
+	renderFixedPoint(sb, w2, altitude - 10000000, 100);
 	sb.append("m ");
 
 	/* Size */
-	sb.append(w2.format((double)size/100));
+	renderFixedPoint(sb, w2, size, 100);
 	sb.append("m ");
 
 	/* Horizontal precision */
-	sb.append(w2.format((double)hPrecision/100));
+	renderFixedPoint(sb, w2, hPrecision, 100);
 	sb.append("m ");
 
 	/* Vertical precision */
-	sb.append(w2.format((double)vPrecision/100));
+	renderFixedPoint(sb, w2, vPrecision, 100);
 	sb.append("m");
 
 	return sb.toString();
@@ -278,14 +299,14 @@ parseLOCformat(int b) throws WireParseException {
 	return (out);
 }
 
-private byte
+private int
 toLOCformat(long l) {
 	byte exp = 0;
 	while (l > 9) {
 		exp++;
-		l = (l + 5) / 10;
+		l /= 10;
 	}
-	return (byte)((l << 4) + exp);
+	return (int)((l << 4) + exp);
 }
 
 }

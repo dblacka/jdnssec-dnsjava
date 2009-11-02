@@ -30,7 +30,12 @@ public static class Flags {
 
 	/** Key is a secure entry point key */
 	public static final int SEP_KEY = 0x1;
+
+	/** Key has been revoked */
+	public static final int REVOKE = 0x80;
 }
+
+private static final long serialVersionUID = -8679800040426675002L;
 
 DNSKEYRecord() {}
 
