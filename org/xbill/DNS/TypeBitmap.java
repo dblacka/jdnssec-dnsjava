@@ -128,6 +128,7 @@ toWire(DNSOutput out) {
 				mapToWire(out, map, mapbase);
 			map.clear();
 			mapbase = base;
+			map.add(new Integer(t));
 		}
 	}
 	mapToWire(out, map, mapbase);

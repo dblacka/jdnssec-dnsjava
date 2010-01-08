@@ -18,3 +18,7 @@ The differences between this version of DNSJava and the official version are:
    the DNSJava mainainter modified the class in such a way that the
    test driver doesn't work.  It hasn't been completely adjusted to
    work with the new base32 class yet.
+
+5. A bugfix was made in org.xbill.DNS.TypeMap -- when a typemap is
+   constructed from a string, it will miss the first listed type (and
+   potentially the first type in each window)
