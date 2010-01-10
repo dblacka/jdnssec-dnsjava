@@ -1,3 +1,16 @@
+11/21/2009
+	- 2.0.8 released
+
+11/10/2009
+	- Fix the conversion of NSEC/NSEC3 bitmaps into wire format.
+	  (Klaus Malorny <Klaus.Malorny@knipp.de>, also reported by
+	  Tom <808131@gmail.com>).
+
+10/01/2009
+	- Properly initialize the Date objects used in RRSIG (and other)
+	  records, so that any unused fields are cleard.
+	  (Klaus Malorny <Klaus.Malorny@knipp.de>)
+
 9/25/2009
 	- 2.0.7 released
 	- Add support for detecting the configured nameservers on the Android
