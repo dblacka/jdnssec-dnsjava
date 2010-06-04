@@ -19,6 +19,5 @@ The differences between this version of DNSJava and the official version are:
    test driver doesn't work.  It hasn't been completely adjusted to
    work with the new base32 class yet.
 
-5. A bugfix was made in org.xbill.DNS.TypeMap -- when a typemap is
-   constructed from a string, it will miss the first listed type (and
-   potentially the first type in each window)
+5. RSASHA256 and RSASHA512 were added to the KEYRecord.parseRecord()
+   method as additional RSA types.
