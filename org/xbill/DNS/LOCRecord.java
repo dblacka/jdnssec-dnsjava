@@ -76,9 +76,9 @@ rrFromWire(DNSInput in) throws IOException {
 private double
 parseFixedPoint(String s)
 {
-	if (s.matches("^\\d+$"))
+	if (s.matches("^-{0,1}\\d+$"))
 		return Integer.parseInt(s);
-	else if (s.matches("^\\d+\\.\\d*$")) {
+	else if (s.matches("^-{0,1}\\d+\\.\\d*$")) {
 		String [] parts = s.split("\\.");
 		double value = Integer.parseInt(parts[0]);
 		double fraction = Integer.parseInt(parts[1]);
