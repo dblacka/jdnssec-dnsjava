@@ -505,9 +505,9 @@ doxfr() throws IOException, ZoneTransferException {
 			parseRR(answers[i]);
 		}
 
-//		if (state == END && verifier != null &&
-//		    !response.isVerified())
-//			fail("last message must be signed");
+		if (state == END && verifier != null &&
+		    !response.isVerified())
+			fail("last message must be signed");
 	}
 }
 
