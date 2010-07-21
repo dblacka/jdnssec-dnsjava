@@ -441,15 +441,6 @@ public static class StreamVerifier {
 		lastTSIG = old;
 	}
 
-        /**
-         * @deprecated This method DOES NOT verify the final message in the stream,
-         * leading to XFR failures. Use verify(Message m, byte [] b, boolean isLast)
-	 */
-	public int
-	verify(Message m, byte [] b) {
-            return verify(m, b, false);
-        }
-
 	/**
 	 * Verifies a TSIG record on an incoming message that is part of a
 	 * multiple message response.
@@ -459,17 +450,16 @@ public static class StreamVerifier {
 	 * this message.
 	 * @param m The message
 	 * @param b The message in unparsed form
-         * @param isLast Whether this is the last message in the stream
 	 * @return The result of the verification (as an Rcode)
 	 * @see Rcode
 	 */
 	public int
-	verify(Message m, byte [] b, boolean isLast) {
+	verify(Message m, byte [] b) {
 		TSIGRecord tsig = m.getTSIG();
 	
 		nresponses++;
 
-		if (nresponses == 1 || isLast) {
+		if (nresponses == 1) {
 			int result = key.verify(m, b, lastTSIG);
 			if (result == Rcode.NOERROR) {
 				byte [] signature = tsig.getSignature();

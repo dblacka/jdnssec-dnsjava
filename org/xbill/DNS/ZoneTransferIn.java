@@ -467,9 +467,9 @@ doxfr() throws IOException, ZoneTransferException {
 		if (response.getHeader().getRcode() == Rcode.NOERROR &&
 		    verifier != null)
 		{
-			boolean isEnd = (state == END);
+			TSIGRecord tsigrec = response.getTSIG();
 
-			int error = verifier.verify(response, in, isEnd);
+			int error = verifier.verify(response, in);
 			if (error != Rcode.NOERROR)
 				fail("TSIG failure");
 		}
