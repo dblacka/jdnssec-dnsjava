@@ -467,9 +467,9 @@ doxfr() throws IOException, ZoneTransferException {
 		if (response.getHeader().getRcode() == Rcode.NOERROR &&
 		    verifier != null)
 		{
-			TSIGRecord tsigrec = response.getTSIG();
+			boolean isEnd = (state == END);
 
-			int error = verifier.verify(response, in);
+			int error = verifier.verify(response, in, isEnd);
 			if (error != Rcode.NOERROR)
 				fail("TSIG failure");
 		}
@@ -505,9 +505,9 @@ doxfr() throws IOException, ZoneTransferException {
 			parseRR(answers[i]);
 		}
 
-		if (state == END && verifier != null &&
-		    !response.isVerified())
-			fail("last message must be signed");
+//		if (state == END && verifier != null &&
+//		    !response.isVerified())
+//			fail("last message must be signed");
 	}
 }
 
