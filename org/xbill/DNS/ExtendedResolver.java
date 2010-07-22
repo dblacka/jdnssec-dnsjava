@@ -132,9 +132,7 @@ private static class Resolution implements ResolverListener {
 	public void
 	startAsync(ResolverListener listener) {
 		this.listener = listener;
-                for(int i = 0;i < this.resolvers.length;i++) {
-                    send(i);
-                }
+                send(0);
 	}
 
 	/*
