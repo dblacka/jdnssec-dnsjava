@@ -15,6 +15,30 @@ private static final int EPHEMERAL_STOP  = 65535;
 private static final int EPHEMERAL_RANGE  = EPHEMERAL_STOP - EPHEMERAL_START;
 
 private static SecureRandom prng = new SecureRandom();
+private static volatile boolean prng_initializing = true;
+
+/*
+ * On some platforms (Windows), the SecureRandom module initialization involves
+ * a call to InetAddress.getLocalHost(), which can end up here if using a
+ * dnsjava name service provider.
+ *
+ * This can cause problems in multiple ways.
+ *   - If the SecureRandom seed generation process calls into here, and this
+ *     module attempts to seed the local SecureRandom object, the thread hangs.
+ *   - If something else calls InetAddress.getLocalHost(), and that causes this
+ *     module to seed the local SecureRandom object, the thread hangs.
+ *
+ * To avoid both of these, check at initialization time to see if InetAddress
+ * is in the call chain.  If so, initialize the SecureRandom object in a new
+ * thread, and disable port randomization until it completes.
+ */
+static {
+	new Thread(new Runnable() {
+			   public void run() {
+			   int n = prng.nextInt();
+			   prng_initializing = false;
+		   }}).start();
+}
 
 private boolean bound = false;
 
@@ -26,6 +50,16 @@ UDPClient(long endTime) throws IOException {
 private void
 bind_random(InetSocketAddress addr) throws IOException
 {
+	if (prng_initializing) {
+		try {
+			Thread.sleep(2);
+		}
+		catch (InterruptedException e) {
+		}
+		if (prng_initializing)
+			return;
+	}
+
 	DatagramChannel channel = (DatagramChannel) key.channel();
 	InetSocketAddress temp;
 

@@ -189,7 +189,8 @@ fromWire(DNSInput in, int section, boolean isUpdate) throws IOException {
 
 	ttl = in.readU32();
 	length = in.readU16();
-	if (length == 0 && isUpdate)
+	if (length == 0 && isUpdate &&
+	    (section == Section.PREREQ || section == Section.UPDATE))
 		return newRecord(name, type, dclass, ttl);
 	rec = newRecord(name, type, dclass, ttl, length, in);
 	return rec;
@@ -220,10 +221,7 @@ toWire(DNSOutput out, int section, Compression c) {
 	out.writeU16(0); /* until we know better */
 	rrToWire(out, c, false);
 	int rrlength = out.current() - lengthPosition - 2;
-	out.save();
-	out.jump(lengthPosition);
-	out.writeU16(rrlength);
-	out.restore();
+	out.writeU16At(rrlength, lengthPosition);
 }
 
 /**
@@ -250,10 +248,7 @@ toWireCanonical(DNSOutput out, boolean noTTL) {
 	out.writeU16(0); /* until we know better */
 	rrToWire(out, null, true);
 	int rrlength = out.current() - lengthPosition - 2;
-	out.save();
-	out.jump(lengthPosition);
-	out.writeU16(rrlength);
-	out.restore();
+	out.writeU16At(rrlength, lengthPosition);
 }
 
 /*
@@ -520,8 +515,8 @@ getType() {
 
 /**
  * Returns the type of RRset that this record would belong to.  For all types
- * except RRSIGRecord, this is equivalent to getType().
- * @return The type of record, if not SIGRecord.  If the type is RRSIGRecord,
+ * except RRSIG, this is equivalent to getType().
+ * @return The type of record, if not RRSIG.  If the type is RRSIG,
  * the type covered is returned.
  * @see Type
  * @see RRset
@@ -725,6 +720,17 @@ checkName(String field, Name name) {
 	if (!name.isAbsolute())
 		throw new RelativeNameException(name);
 	return name;
+}
+
+static byte []
+checkByteArrayLength(String field, byte [] array, int maxLength) {
+	if (array.length > 0xFFFF)
+		throw new IllegalArgumentException("\"" + field + "\" array " +
+						   "must have no more than " +
+						   maxLength + " elements");
+	byte [] out = new byte[array.length];
+	System.arraycopy(array, 0, out, 0, array.length);
+	return out;
 }
 
 }

@@ -16,8 +16,18 @@ import org.xbill.DNS.utils.*;
 
 public class DSRecord extends Record {
 
-public static final byte SHA1_DIGEST_ID = 1;
-public static final byte SHA256_DIGEST_ID = 2;
+public static class Digest {
+	private Digest() {}
+
+	/** SHA-1 */
+	public static final int SHA1 = 1;
+
+	/** SHA-256 */
+	public static final int SHA256 = 2;
+}
+
+public static final int SHA1_DIGEST_ID = Digest.SHA1;
+public static final int SHA256_DIGEST_ID = Digest.SHA256;
 
 private static final long serialVersionUID = -9001819329700081493L;
 
@@ -42,13 +52,27 @@ getObject() {
  */
 public
 DSRecord(Name name, int dclass, long ttl, int footprint, int alg,
-	 int digestid, byte []  digest)
+	 int digestid, byte [] digest)
 {
 	super(name, Type.DS, dclass, ttl);
 	this.footprint = checkU16("footprint", footprint);
 	this.alg = checkU8("alg", alg);
 	this.digestid = checkU8("digestid", digestid);
 	this.digest = digest;
+}
+
+/**
+ * Creates a DS Record from the given data
+ * @param footprint The original KEY record's footprint (keyid).
+ * @param digestid The digest id code.
+ * @param key The key to digest
+ */
+public
+DSRecord(Name name, int dclass, long ttl, int footprint, int digestid,
+	 DNSKEYRecord key)
+{
+	this(name, dclass, ttl, footprint, key.getAlgorithm(), digestid,
+	     DNSSEC.generateDS(key, digestid));
 }
 
 void

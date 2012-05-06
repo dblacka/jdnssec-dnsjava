@@ -18,6 +18,3 @@ The differences between this version of DNSJava and the official version are:
    the DNSJava mainainter modified the class in such a way that the
    test driver doesn't work.  It hasn't been completely adjusted to
    work with the new base32 class yet.
-
-5. RSASHA256 and RSASHA512 were added to the KEYRecord.parseRecord()
-   method as additional RSA types.

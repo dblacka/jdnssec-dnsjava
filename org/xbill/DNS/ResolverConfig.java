@@ -35,6 +35,7 @@ public class ResolverConfig {
 
 private String [] servers = null;
 private Name [] searchlist = null;
+private int ndots = -1;
 
 private static ResolverConfig currentConfig;
 
@@ -93,12 +94,34 @@ addSearch(String search, List list) {
 	list.add(name);
 }
 
+private int
+parseNdots(String token) {
+	token = token.substring(6);
+	try {
+		int ndots = Integer.parseInt(token);
+		if (ndots >= 0) {
+			if (Options.check("verbose"))
+				System.out.println("setting ndots " + token);
+			return ndots;
+		}
+	}
+	catch (NumberFormatException e) {
+	}
+	return -1;
+}
+
 private void
 configureFromLists(List lserver, List lsearch) {
 	if (servers == null && lserver.size() > 0)
 		servers = (String []) lserver.toArray(new String[0]);
 	if (searchlist == null && lsearch.size() > 0)
 		searchlist = (Name []) lsearch.toArray(new Name[0]);
+}
+
+private void
+configureNdots(int lndots) {
+	if (ndots < 0 && lndots > 0)
+		ndots = lndots;
 }
 
 /**
@@ -202,6 +225,7 @@ findResolvConf(String file) {
 	BufferedReader br = new BufferedReader(isr);
 	List lserver = new ArrayList(0);
 	List lsearch = new ArrayList(0);
+	int lndots = -1;
 	try {
 		String line;
 		while ((line = br.readLine()) != null) {
@@ -226,6 +250,16 @@ findResolvConf(String file) {
 				while (st.hasMoreTokens())
 					addSearch(st.nextToken(), lsearch);
 			}
+			else if(line.startsWith("options")) {
+				StringTokenizer st = new StringTokenizer(line);
+				st.nextToken(); /* skip options */
+				while (st.hasMoreTokens()) {
+					String token = st.nextToken();
+					if (token.startsWith("ndots:")) {
+						lndots = parseNdots(token);
+					}
+				}
+			}
 		}
 		br.close();
 	}
@@ -233,6 +267,7 @@ findResolvConf(String file) {
 	}
 
 	configureFromLists(lserver, lsearch);
+	configureNdots(lndots);
 }
 
 private void
@@ -249,10 +284,14 @@ findNetware() {
  * Parses the output of winipcfg or ipconfig.
  */
 private void
-findWin(InputStream in) {
+findWin(InputStream in, Locale locale) {
 	String packageName = ResolverConfig.class.getPackage().getName();
 	String resPackageName = packageName + ".windows.DNSServer";
-	ResourceBundle res = ResourceBundle.getBundle(resPackageName);
+	ResourceBundle res;
+	if (locale != null)
+		res = ResourceBundle.getBundle(resPackageName, locale);
+	else
+		res = ResourceBundle.getBundle(resPackageName);
 
 	String host_name = res.getString("host_name");
 	String primary_dns_suffix = res.getString("primary_dns_suffix");
@@ -324,14 +363,26 @@ findWin(InputStream in) {
 	}
 	catch (IOException e) {
 	}
-	finally {
-		try {
-			br.close();
-		}
-		catch (IOException e) {
-		}
-	}
 	return;
+}
+
+private void
+findWin(InputStream in) {
+	String property = "org.xbill.DNS.windows.parse.buffer";
+	final int defaultBufSize = 8 * 1024;
+	int bufSize = Integer.getInteger(property, defaultBufSize).intValue();
+	BufferedInputStream b = new BufferedInputStream(in, bufSize);
+	b.mark(bufSize);
+	findWin(b, null);
+	if (servers == null) {
+		try {
+			b.reset();
+		} 
+		catch (IOException e) {
+			return;
+		}
+		findWin(b, new Locale("", ""));
+	}
 }
 
 /**
@@ -376,27 +427,32 @@ findNT() {
  */
 private void
 findAndroid() {
+	// This originally looked for all lines containing .dns; but
+	// http://code.google.com/p/android/issues/detail?id=2207#c73
+	// indicates that net.dns* should always be the active nameservers, so
+	// we use those.
 	String re1 = "^\\d+(\\.\\d+){3}$";
 	String re2 = "^[0-9a-f]+(:[0-9a-f]*)+:[0-9a-f]+$";
 	try { 
-		ArrayList maybe = new ArrayList(); 
+		ArrayList lserver = new ArrayList(); 
+		ArrayList lsearch = new ArrayList(); 
 		String line; 
 		Process p = Runtime.getRuntime().exec("getprop"); 
 		InputStream in = p.getInputStream();
 		InputStreamReader isr = new InputStreamReader(in);
 		BufferedReader br = new BufferedReader(isr);
 		while ((line = br.readLine()) != null ) { 
-			StringTokenizer t = new StringTokenizer( line, ":" );
+			StringTokenizer t = new StringTokenizer(line, ":");
 			String name = t.nextToken();
-			if (name.indexOf( ".dns" ) > -1) {
+			if (name.indexOf( "net.dns" ) > -1) {
 				String v = t.nextToken();
-				v = v.replaceAll( "[ \\[\\]]", "" );
+				v = v.replaceAll("[ \\[\\]]", "");
 				if ((v.matches(re1) || v.matches(re2)) &&
-				    !maybe.contains(v))
-					maybe.add(v);
+				    !lserver.contains(v))
+					lserver.add(v);
 			}
 		}
-		configureFromLists(maybe, null);
+		configureFromLists(lserver, lsearch);
 	} catch ( Exception e ) { 
 		// ignore resolutely
 	}
@@ -420,6 +476,19 @@ server() {
 public Name []
 searchPath() {
 	return searchlist;
+}
+
+/**
+ * Returns the located ndots value, or the default (1) if not configured.
+ * Note that ndots can only be configured in a resolv.conf file, and will only
+ * take effect if ResolverConfig uses resolv.conf directly (that is, if the
+ * JVM does not include the sun.net.dns.ResolverConfiguration class).
+ */
+public int
+ndots() {
+	if (ndots < 0)
+		return 1;
+	return ndots;
 }
 
 /** Gets the current configuration */

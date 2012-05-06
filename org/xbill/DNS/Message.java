@@ -30,6 +30,7 @@ private int tsigerror;
 
 int tsigstart;
 int tsigState;
+int sig0start;
 
 /* The message was not signed */
 static final int TSIG_UNSIGNED = 0;
@@ -109,6 +110,9 @@ Message(DNSInput in) throws IOException {
 				sections[i].add(rec);
 				if (rec.getType() == Type.TSIG)
 					tsigstart = pos;
+				if (rec.getType() == Type.SIG &&
+				    ((SIGRecord) rec).getTypeCovered() == 0)
+					sig0start = pos;
 			}
 		}
 	} catch (WireParseException e) {
@@ -436,20 +440,19 @@ toWire(DNSOutput out, int maxLength) {
 			continue;
 		skipped = sectionToWire(out, i, c, tempMaxLength);
 		if (skipped != 0) {
-			if (i != Section.ADDITIONAL) {
-				if (newheader == null)
-					newheader = (Header) header.clone();
+			if (newheader == null)
+				newheader = (Header) header.clone();
+			if (i != Section.ADDITIONAL)
 				newheader.setFlag(Flags.TC);
-				int count = newheader.getCount(i);
-				newheader.setCount(i, count - skipped);
-				for (int j = i + 1; j < 4; j++)
-					newheader.setCount(j, 0);
+			int count = newheader.getCount(i);
+			newheader.setCount(i, count - skipped);
+			for (int j = i + 1; j < 4; j++)
+				newheader.setCount(j, 0);
 
-				out.save();
-				out.jump(startpos);
-				newheader.toWire(out);
-				out.restore();
-			}
+			out.save();
+			out.jump(startpos);
+			newheader.toWire(out);
+			out.restore();
 			break;
 		}
 	}

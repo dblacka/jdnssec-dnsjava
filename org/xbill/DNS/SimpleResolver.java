@@ -68,6 +68,11 @@ SimpleResolver() throws UnknownHostException {
 	this(null);
 }
 
+/**
+ * Gets the destination address associated with this SimpleResolver.
+ * Messages sent using this SimpleResolver will be sent to this address.
+ * @return The destination address associated with this SimpleResolver.
+ */
 InetSocketAddress
 getAddress() {
 	return address;
@@ -192,7 +197,7 @@ verifyTSIG(Message query, Message response, byte [] b, TSIG tsig) {
 		return;
 	int error = tsig.verify(response, b, query.getTSIG());
 	if (Options.check("verbose"))
-		System.err.println("TSIG verify: " + Rcode.string(error));
+		System.err.println("TSIG verify: " + Rcode.TSIGstring(error));
 }
 
 private void

@@ -369,4 +369,34 @@ addressLength(int family) {
 	throw new IllegalArgumentException("unknown address family");
 }
 
+/**
+ * Truncates an address to the specified number of bits.  For example,
+ * truncating the address 10.1.2.3 to 8 bits would yield 10.0.0.0.
+ * @param address The source address
+ * @param maskLength The number of bits to truncate the address to.
+ */
+public static InetAddress
+truncate(InetAddress address, int maskLength)
+{
+	int family = familyOf(address);
+	int maxMaskLength = addressLength(family) * 8;
+	if (maskLength < 0 || maskLength > maxMaskLength)
+		throw new IllegalArgumentException("invalid mask length");
+	if (maskLength == maxMaskLength)
+		return address;
+	byte [] bytes = address.getAddress();
+	for (int i = maskLength / 8 + 1; i < bytes.length; i++)
+		bytes[i] = 0;
+	int maskBits = maskLength % 8;
+	int bitmask = 0;
+	for (int i = 0; i < maskBits; i++)
+		bitmask |= (1 << (7 - i));
+	bytes[maskLength / 8] &= bitmask;
+	try {
+		return InetAddress.getByAddress(bytes);
+	} catch (UnknownHostException e) {
+		throw new IllegalArgumentException("invalid address");
+	}
+}
+
 }

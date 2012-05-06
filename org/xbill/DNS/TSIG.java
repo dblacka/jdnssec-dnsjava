@@ -17,7 +17,10 @@ public class TSIG {
 
 private static final String HMAC_MD5_STR = "HMAC-MD5.SIG-ALG.REG.INT.";
 private static final String HMAC_SHA1_STR = "hmac-sha1.";
+private static final String HMAC_SHA224_STR = "hmac-sha224.";
 private static final String HMAC_SHA256_STR = "hmac-sha256.";
+private static final String HMAC_SHA384_STR = "hmac-sha384.";
+private static final String HMAC_SHA512_STR = "hmac-sha512.";
 
 /** The domain name representing the HMAC-MD5 algorithm. */
 public static final Name HMAC_MD5 = Name.fromConstantString(HMAC_MD5_STR);
@@ -28,8 +31,21 @@ public static final Name HMAC = HMAC_MD5;
 /** The domain name representing the HMAC-SHA1 algorithm. */
 public static final Name HMAC_SHA1 = Name.fromConstantString(HMAC_SHA1_STR);
 
+/**
+ * The domain name representing the HMAC-SHA224 algorithm.
+ * Note that SHA224 is not supported by Java out-of-the-box, this requires use
+ * of a third party provider like BouncyCastle.org.
+ */
+public static final Name HMAC_SHA224 = Name.fromConstantString(HMAC_SHA224_STR);
+
 /** The domain name representing the HMAC-SHA256 algorithm. */
 public static final Name HMAC_SHA256 = Name.fromConstantString(HMAC_SHA256_STR);
+
+/** The domain name representing the HMAC-SHA384 algorithm. */
+public static final Name HMAC_SHA384 = Name.fromConstantString(HMAC_SHA384_STR);
+
+/** The domain name representing the HMAC-SHA512 algorithm. */
+public static final Name HMAC_SHA512 = Name.fromConstantString(HMAC_SHA512_STR);
 
 /**
  * The default fudge value for outgoing packets.  Can be overriden by the
@@ -39,17 +55,30 @@ public static final short FUDGE		= 300;
 
 private Name name, alg;
 private String digest;
+private int digestBlockLength;
 private byte [] key;
 
 private void
 getDigest() {
-	if (alg.equals(HMAC_MD5))
+	if (alg.equals(HMAC_MD5)) {
 		digest = "md5";
-	else if (alg.equals(HMAC_SHA1))
+		digestBlockLength = 64;
+	} else if (alg.equals(HMAC_SHA1)) {
 		digest = "sha-1";
-	else if (alg.equals(HMAC_SHA256))
+		digestBlockLength = 64;
+	} else if (alg.equals(HMAC_SHA224)) {
+		digest = "sha-224";
+		digestBlockLength = 64;
+	} else if (alg.equals(HMAC_SHA256)) {
 		digest = "sha-256";
-	else
+		digestBlockLength = 64;
+	} else if (alg.equals(HMAC_SHA512)) {
+		digest = "sha-512";
+		digestBlockLength = 128;
+	} else if (alg.equals(HMAC_SHA384)) {
+		digest = "sha-384";
+		digestBlockLength = 128;
+	} else
 		throw new IllegalArgumentException("Invalid algorithm");
 }
 
@@ -102,8 +131,10 @@ TSIG(Name algorithm, String name, String key) {
 
 /**
  * Creates a new TSIG object, which can be used to sign or verify a message.
- * @param name The name of the shared key.  The legal values are "hmac-md5",
- * "hmac-sha1", and "hmac-sha256".
+ * @param name The name of the shared key.
+ * @param algorithm The algorithm of the shared key.  The legal values are
+ * "hmac-md5", "hmac-sha1", "hmac-sha224", "hmac-sha256", "hmac-sha384", and
+ * "hmac-sha512".
  * @param key The shared key's data represented as a base64 encoded string.
  * @throws IllegalArgumentException The key name is an invalid name
  * @throws IllegalArgumentException The key data is improperly encoded
@@ -115,8 +146,14 @@ TSIG(String algorithm, String name, String key) {
 		this.alg = HMAC_MD5;
 	else if (algorithm.equalsIgnoreCase("hmac-sha1"))
 		this.alg = HMAC_SHA1;
+	else if (algorithm.equalsIgnoreCase("hmac-sha224"))
+		this.alg = HMAC_SHA224;
 	else if (algorithm.equalsIgnoreCase("hmac-sha256"))
 		this.alg = HMAC_SHA256;
+	else if (algorithm.equalsIgnoreCase("hmac-sha384"))
+		this.alg = HMAC_SHA384;
+	else if (algorithm.equalsIgnoreCase("hmac-sha512"))
+		this.alg = HMAC_SHA512;
 	else
 		throw new IllegalArgumentException("Invalid TSIG algorithm");
 	getDigest();
@@ -136,8 +173,7 @@ TSIG(String name, String key) {
 }
 
 /**
- * Creates a new TSIG object with the hmac-md5 algorithm, which can be used to
- * sign or verify a message.
+ * Creates a new TSIG object, which can be used to sign or verify a message.
  * @param str The TSIG key, in the form name:secret, name/secret,
  * alg:name:secret, or alg/name/secret.  If an algorithm is specified, it must
  * be "hmac-md5", "hmac-sha1", or "hmac-sha256".
@@ -148,14 +184,18 @@ TSIG(String name, String key) {
  */
 static public TSIG
 fromString(String str) {
-	String [] parts = str.split("[:/]");
-	if (parts.length < 2 || parts.length > 3)
+	String [] parts = str.split("[:/]", 3);
+	if (parts.length < 2)
 		throw new IllegalArgumentException("Invalid TSIG key " +
 						   "specification");
-	if (parts.length == 3)
-		return new TSIG(parts[0], parts[1], parts[2]);
-	else
-		return new TSIG(HMAC_MD5, parts[0], parts[1]);
+	if (parts.length == 3) {
+		try {
+			return new TSIG(parts[0], parts[1], parts[2]);
+		} catch (IllegalArgumentException e) {
+			parts = str.split("[:/]", 2);
+		}
+	}
+	return new TSIG(HMAC_MD5, parts[0], parts[1]);
 }
 
 /**
@@ -177,7 +217,7 @@ generate(Message m, byte [] b, int error, TSIGRecord old) {
 	int fudge;
 	HMAC hmac = null;
 	if (error == Rcode.NOERROR || error == Rcode.BADTIME)
-		hmac = new HMAC(digest, key);
+		hmac = new HMAC(digest, digestBlockLength, key);
 
 	fudge = Options.intValue("tsigfudge");
 	if (fudge < 0 || fudge > 0x7FFF)
@@ -272,7 +312,7 @@ applyStream(Message m, TSIGRecord old, boolean first) {
 	}
 	Date timeSigned = new Date();
 	int fudge;
-	HMAC hmac = new HMAC(digest, key);
+	HMAC hmac = new HMAC(digest, digestBlockLength, key);
 
 	fudge = Options.intValue("tsigfudge");
 	if (fudge < 0 || fudge > 0x7FFF)
@@ -324,7 +364,7 @@ public byte
 verify(Message m, byte [] b, int length, TSIGRecord old) {
 	m.tsigState = Message.TSIG_FAILED;
 	TSIGRecord tsig = m.getTSIG();
-	HMAC hmac = new HMAC(digest, key);
+	HMAC hmac = new HMAC(digest, digestBlockLength, key);
 	if (tsig == null)
 		return Rcode.FORMERR;
 
@@ -379,14 +419,26 @@ verify(Message m, byte [] b, int length, TSIGRecord old) {
 
 	hmac.update(out.toByteArray());
 
-	if (hmac.verify(tsig.getSignature())) {
-		m.tsigState = Message.TSIG_VERIFIED;
-		return Rcode.NOERROR;
-	} else {
+	byte [] signature = tsig.getSignature();
+	int digestLength = hmac.digestLength();
+	int minDigestLength = digest.equals("md5") ? 10 : digestLength / 2;
+
+	if (signature.length > digestLength) {
 		if (Options.check("verbose"))
-			System.err.println("BADSIG failure");
+			System.err.println("BADSIG: signature too long");
+		return Rcode.BADSIG;
+	} else if (signature.length < minDigestLength) {
+		if (Options.check("verbose"))
+			System.err.println("BADSIG: signature too short");
+		return Rcode.BADSIG;
+	} else if (!hmac.verify(signature, true)) {
+		if (Options.check("verbose"))
+			System.err.println("BADSIG: signature verification");
 		return Rcode.BADSIG;
 	}
+
+	m.tsigState = Message.TSIG_VERIFIED;
+	return Rcode.NOERROR;
 }
 
 /**
@@ -436,7 +488,7 @@ public static class StreamVerifier {
 	public
 	StreamVerifier(TSIG tsig, TSIGRecord old) {
 		key = tsig;
-		verifier = new HMAC(key.digest, key.key);
+		verifier = new HMAC(key.digest, key.digestBlockLength, key.key);
 		nresponses = 0;
 		lastTSIG = old;
 	}

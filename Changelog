@@ -1,3 +1,101 @@
+10/24/2011
+	- 2.1.3 released
+
+10/17/2011
+	- Add a callback interface to ZoneTransferIn.
+	  (based on a patch from Nick Sayer <nsayer@silverspringnet.com>)
+
+10/10/2011
+	- An exception could be thrown when attempting to look up data in the
+	  cache for type ANY when there were only previously cached
+	  NOERROR/NODATA responses for that name.
+	  (reported by Niel de Wet <nieldw@gmail.com>)
+
+7/24/2011
+	- 2.1.2 released
+
+6/9/2011
+	- TypeBitmap.toString() failed if no bits were set.
+	  (patch from Jeffrey Damick <Jeffrey.Damick@neustar.biz>)
+
+5/24/2011
+	- TSIG.fromString() didn't handle base64-encoded secrets with /
+	  characters. (reported by Sten <stennordstrom@users.sourceforge.net>)
+
+5/12/2011
+	- Support verifying truncated TSIG signatures, as specified in RFC
+	  4635.
+
+5/10/2011
+	- Refactor EDNS Option support to allow for custom type
+	  implementations, and add support for the Client Subnet option.
+	  (based on a patch from Ming Zhou <mizhou@bnivideo.com>)
+
+	- Add support for the NSID EDNS option.
+
+4/20/2011
+	- Add missing support for the HMAC-SHA224, HMA-SHA384, and HMAC-SHA384
+	  TSIG algorithms. (patch from Thomas Corte <Thomas.Corte@knipp.de>)
+
+3/9/2011
+	- Add support for using alternate JCA providers when generating DNSSEC
+	  signatures (patch from Jeffrey Damick <Jeffrey.Damick@neustar.biz>)
+
+2/9/2011
+	- 2.1.1 released
+
+2/3/2011
+	- Add the ability to set ndots on Lookup objects, and parse the ndots
+	  option from a resolv.conf file (patch from Oleg Tsvinev
+	  <Oleg.Tsvinev@Reardencommerce.com>).
+
+2/3/2011
+	- The 'file' command in the 'update' program didn't work correctly.
+	  (reported by Olafur Gudmundsson <ogud@ogud.com>)
+
+9/15/2010
+	- Change the Android name server detection mechanism to avoid false
+	  positives. (patch from Ulf Dittmer)
+
+9/9/2010
+	- The IXFR code didn't do serial number arithmetic correctly, and would
+	  fail if the serial number wrapped.
+	  (patch from Alexis MacFarlane <Alexis.MacFarlane@usc-bt.com>)
+
+9/7/2010
+	- 2.1.0 released
+
+8/17/2010
+	- When rendering a message, if records from the additional section did
+	  not fit, the header counts were not properly updated.
+	  (patch from Klaus Malorny <Klaus.Malorny@knipp.de>)
+
+7/22/2010
+	- Fix LOC record parsing to allow negative altitudes.
+	  (based on a patch from William Kocik <wkocik@verisign.com>)
+
+7/21/2010
+	- The changes to TSIG verification in 2.0.6 didn't work correctly for
+	  stream verification; specifically, the state was only set on the
+	  first Message in the stream.
+	  (reported by William Kocik <wkocik@verisign.com>)
+
+5/12/2010
+	- Add support for determining resolver configuration on
+	  Japanese Windows.  (translation and original patch from
+	  Brett Wooldridge <brettw@users.sourceforge.net>)
+
+5/6/2010
+	- Add support for building an OSGi bundle (patch from
+	  Markus Alexander Kuppe <lemmster@users.sourceforge.net>).
+
+5/2/2010
+	- Rewrite DNSSEC support.
+
+4/15/2010
+	- Fix a hang that could occur when using the dnsjava service provider
+	  on Windows (initial patch from <jy123@users.sourceforge.net>).
+
 11/21/2009
 	- 2.0.8 released
 
@@ -8,7 +106,7 @@
 
 10/01/2009
 	- Properly initialize the Date objects used in RRSIG (and other)
-	  records, so that any unused fields are cleard.
+	  records, so that any unused fields are cleared.
 	  (Klaus Malorny <Klaus.Malorny@knipp.de>)
 
 9/25/2009

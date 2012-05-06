@@ -6,35 +6,36 @@ import java.util.Arrays;
 import java.security.*;
 
 /**
- * A pure java implementation of the HMAC-MD5 secure hash algorithm
+ * An implementation of the HMAC message authentication code.
  *
  * @author Brian Wellington
  */
 
 public class HMAC {
 
-MessageDigest digest;
+private MessageDigest digest;
+private int blockLength;
+
 private byte [] ipad, opad;
 
 private static final byte IPAD = 0x36;
 private static final byte OPAD = 0x5c;
-private static final byte PADLEN = 64;
 
 private void
 init(byte [] key) {
 	int i;
 
-	if (key.length > PADLEN) {
+	if (key.length > blockLength) {
 		key = digest.digest(key);
 		digest.reset();
 	}
-	ipad = new byte[PADLEN];
-	opad = new byte[PADLEN];
+	ipad = new byte[blockLength];
+	opad = new byte[blockLength];
 	for (i = 0; i < key.length; i++) {
 		ipad[i] = (byte) (key[i] ^ IPAD);
 		opad[i] = (byte) (key[i] ^ OPAD);
 	}
-	for (; i < PADLEN; i++) {
+	for (; i < blockLength; i++) {
 		ipad[i] = IPAD;
 		opad[i] = OPAD;
 	}
@@ -44,29 +45,61 @@ init(byte [] key) {
 /**
  * Creates a new HMAC instance
  * @param digest The message digest object.
+ * @param blockLength The block length of the message digest.
  * @param key The secret key
  */
 public
-HMAC(MessageDigest digest, byte [] key) {
+HMAC(MessageDigest digest, int blockLength, byte [] key) {
 	digest.reset();
 	this.digest = digest;
+  	this.blockLength = blockLength;
 	init(key);
 }
 
 /**
  * Creates a new HMAC instance
  * @param digestName The name of the message digest function.
+ * @param blockLength The block length of the message digest.
  * @param key The secret key.
  */
 public
-HMAC(String digestName, byte [] key) {
+HMAC(String digestName, int blockLength, byte [] key) {
 	try {
 		digest = MessageDigest.getInstance(digestName);
 	} catch (NoSuchAlgorithmException e) {
 		throw new IllegalArgumentException("unknown digest algorithm "
 						   + digestName);
 	}
+	this.blockLength = blockLength;
 	init(key);
+}
+
+/**
+ * Creates a new HMAC instance
+ * @param digest The message digest object.
+ * @param key The secret key
+ * @deprecated won't work with digests using a padding length other than 64;
+ *             use {@code HMAC(MessageDigest digest, int blockLength,
+ *             byte [] key)} instead.
+ * @see        HMAC#HMAC(MessageDigest digest, int blockLength, byte [] key)
+ */
+public
+HMAC(MessageDigest digest, byte [] key) {
+	this(digest, 64, key);
+}
+
+/**
+ * Creates a new HMAC instance
+ * @param digestName The name of the message digest function.
+ * @param key The secret key.
+ * @deprecated won't work with digests using a padding length other than 64;
+ *             use {@code HMAC(String digestName, int blockLength, byte [] key)}
+ *             instead
+ * @see        HMAC#HMAC(String digestName, int blockLength, byte [] key)
+ */
+public
+HMAC(String digestName, byte [] key) {
+	this(digestName, 64, key);
 }
 
 /**
@@ -104,11 +137,29 @@ sign() {
 /**
  * Verifies the data (computes the secure hash and compares it to the input)
  * @param signature The signature to compare against
- * @return true if the signature matched, false otherwise
+ * @return true if the signature matches, false otherwise
  */
 public boolean
 verify(byte [] signature) {
-	return Arrays.equals(signature, sign());
+	return verify(signature, false);
+}
+
+/**
+ * Verifies the data (computes the secure hash and compares it to the input)
+ * @param signature The signature to compare against
+ * @param truncation_ok If true, the signature may be truncated; only the
+ * number of bytes in the provided signature are compared.
+ * @return true if the signature matches, false otherwise
+ */
+public boolean
+verify(byte [] signature, boolean truncation_ok) {
+	byte [] expected = sign();
+	if (truncation_ok && signature.length < expected.length) {
+		byte [] truncated = new byte[signature.length];
+		System.arraycopy(expected, 0, truncated, 0, truncated.length);
+		expected = truncated;
+	}
+	return Arrays.equals(signature, expected);
 }
 
 /**
@@ -118,6 +169,14 @@ public void
 clear() {
 	digest.reset();
 	digest.update(ipad);
+}
+
+/**
+ * Returns the length of the digest.
+ */
+public int
+digestLength() {
+	return digest.getDigestLength();
 }
 
 }

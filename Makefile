@@ -5,19 +5,17 @@ JAR = jar cf
 SUNAPIDOC = http://java.sun.com/j2se/1.4/docs/api
 JAVADOC=javadoc -classpath . -d doc -windowtitle "dnsjava documentation" -link ${SUNAPIDOC}
 
-VERSION = 2.0.8-vrsn-1
+VERSION = 2.1.3-vrsn-1
 
 DNSSRC = org/xbill/DNS/*.java \
-	 org/xbill/DNS/utils/*.java \
-	 org/xbill/DNS/security/*.java
+	 org/xbill/DNS/utils/*.java
 PROGSRC = *.java
 
 DNSCLASS = org/xbill/DNS/*.class \
-	   org/xbill/DNS/utils/*.class \
-	   org/xbill/DNS/security/*.class
+	   org/xbill/DNS/utils/*.class
 PROGCLASS = *.class
 
-CLASSLIST = org.xbill.DNS org.xbill.DNS.utils org.xbill.DNS.security
+CLASSLIST = org.xbill.DNS org.xbill.DNS.utils
 
 JARFILE = dnsjava-${VERSION}.jar
 
