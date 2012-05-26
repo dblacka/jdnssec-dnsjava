@@ -60,7 +60,16 @@ getAddress() {
 
 void
 rrToWire(DNSOutput out, Compression c, boolean canonical) {
-	out.writeByteArray(address.getAddress());
+	byte[] thisAddressBytes = address.getAddress();
+	if(thisAddressBytes.length == 4) {
+		byte[] templateIPV6 = new byte[16];
+		templateIPV6[10] = (byte)0xFF;
+		templateIPV6[11] = (byte)0xFF;
+		System.arraycopy(thisAddressBytes, 0, templateIPV6, 12, 4);
+		out.writeByteArray(templateIPV6);
+	} else {
+		out.writeByteArray(thisAddressBytes);
+	}
 }
 
 }
