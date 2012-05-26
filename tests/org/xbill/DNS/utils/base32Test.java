@@ -116,22 +116,21 @@ public class base32Test extends TestCase
 
   public void test_fromString_empty1()
   {
-    //byte[] data = new byte[0];
     byte[] out = b32hexpadding.fromString("");
-    assertTrue(out == null);
+    assertTrue(out == null || out.length == 0);
   }
 
   public void test_fromString_basic1()
   {
     byte[] exp = {0x53};
-    byte[] out = b32hexpadding.fromString("AC");
+    byte[] out = b32hexnopadding.fromString("AC");
     assertEquals(exp, out);
   }
 
   public void test_fromString_basic1_lc()
   {
     byte[] exp = {0x53};
-    byte[] out = b32hexpadding.fromString("ac");
+    byte[] out = b32hexnopadding.fromString("ac");
     assertEquals(exp, out);
   }
   
@@ -144,9 +143,9 @@ public class base32Test extends TestCase
   public void test_fromString_basic2()
   {
     byte[] exp = {0x54, 0x57};
-    byte[] out = b32hexpadding.fromString("AHBG");
+    byte[] out = b32hexnopadding.fromString("AHBG");
     assertEquals(exp, out);
-    out = b32hexpadding.fromString("ahbg");
+    out = b32hexnopadding.fromString("ahbg");
     assertEquals(exp, out);
     out = b32hexpadding.fromString("ahbg====");
     assertEquals(exp, out);
@@ -155,9 +154,9 @@ public class base32Test extends TestCase
   public void test_fromString_basic3()
   {
     byte[] exp = {0x64, 0x65, 0x66};
-    byte[] out = b32hexpadding.fromString("CHIMC");
+    byte[] out = b32hexnopadding.fromString("CHIMC");
     assertEquals(exp, out);
-    out = b32hexpadding.fromString("chImC");
+    out = b32hexnopadding.fromString("chImC");
     assertEquals(exp, out);
     out = b32hexpadding.fromString("chimc===");
     assertEquals(exp, out);
@@ -166,7 +165,7 @@ public class base32Test extends TestCase
   public void test_fromString_basic4()
   {
     byte[] exp = {(byte) 0xFC, 0, 0};
-    byte[] out = b32hexpadding.fromString("vg000");
+    byte[] out = b32hexnopadding.fromString("vg000");
     assertEquals(exp, out);
     out = b32hexpadding.fromString("VG000===");
     assertEquals(exp, out);
@@ -175,14 +174,14 @@ public class base32Test extends TestCase
   public void test_fromString_basic5()
   {
     byte[] exp = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    byte[] out = b32hexpadding.fromString("VVVVU");
+    byte[] out = b32hexnopadding.fromString("VVVVU");
     assertEquals(out, exp);
   }
 
   public void test_fromString_basic6()
   {
     byte[] exp = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    byte[] out = b32hexpadding.fromString("041061050O3GG28");
+    byte[] out = b32hexnopadding.fromString("041061050O3GG28");
     assertEquals(out, exp);
     out = b32hexpadding.fromString("041061050O3GG28=");
     assertEquals(out, exp);
@@ -190,25 +189,25 @@ public class base32Test extends TestCase
 
   public void test_fromString_invalid1()
   {
-    byte[] out = b32hexpadding.fromString("000");
+    byte[] out = b32hexnopadding.fromString("000");
     assertNull(out);
   }
 
   public void test_fromString_invalid2()
   {
-    byte[] out = b32hexpadding.fromString("000000");
+    byte[] out = b32hexnopadding.fromString("000000");
     assertNull(out);
   }
 
   public void test_fromString_invalid3()
   {
-    byte[] out = b32hexpadding.fromString("0");
+    byte[] out = b32hexnopadding.fromString("0");
     assertNull(out);
   }
 
   public void test_fromString_invalid4()
   {
-    byte[] out = b32hexpadding.fromString("WX");
+    byte[] out = b32hexnopadding.fromString("WX");
     assertNull(out);
   }
 
