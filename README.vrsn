@@ -28,3 +28,5 @@ The differences between this version of DNSJava and the official version are:
 7. The AddressTest testcase has been updated with new expected results
    to make it pass.  This testcase is querying existing, public DNS
    entries which have a tendency to change, causing the test to fail.
+
+8. TSIG.HMAC_MD5_STR has been downcased to solve some interop problems.
