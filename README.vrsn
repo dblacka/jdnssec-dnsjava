@@ -30,3 +30,7 @@ The differences between this version of DNSJava and the official version are:
    entries which have a tendency to change, causing the test to fail.
 
 8. TSIG.HMAC_MD5_STR has been downcased to solve some interop problems.
+
+9. Updated ZoneTransferIn to correctly reflect the type of xfr
+   performed.  We expect this change to happen in the next official
+   dnsjava release, too.
