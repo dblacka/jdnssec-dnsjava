@@ -24,10 +24,14 @@ public static class Digest {
 
 	/** SHA-256 */
 	public static final int SHA256 = 2;
+
+	/** SHA-384 */
+	public static final int SHA384 = 4;
 }
 
 public static final int SHA1_DIGEST_ID = Digest.SHA1;
 public static final int SHA256_DIGEST_ID = Digest.SHA256;
+public static final int SHA384_DIGEST_ID = Digest.SHA384;
 
 private static final long serialVersionUID = -9001819329700081493L;
 
@@ -63,16 +67,14 @@ DSRecord(Name name, int dclass, long ttl, int footprint, int alg,
 
 /**
  * Creates a DS Record from the given data
- * @param footprint The original KEY record's footprint (keyid).
  * @param digestid The digest id code.
  * @param key The key to digest
  */
 public
-DSRecord(Name name, int dclass, long ttl, int footprint, int digestid,
-	 DNSKEYRecord key)
+DSRecord(Name name, int dclass, long ttl, int digestid, DNSKEYRecord key)
 {
-	this(name, dclass, ttl, footprint, key.getAlgorithm(), digestid,
-	     DNSSEC.generateDS(key, digestid));
+	this(name, dclass, ttl, key.getFootprint(), key.getAlgorithm(),
+	     digestid, DNSSEC.generateDSDigest(key, digestid));
 }
 
 void
