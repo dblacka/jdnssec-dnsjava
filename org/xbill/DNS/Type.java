@@ -192,6 +192,9 @@ public static final int ANY		= 255;
 /** DNSSEC Lookaside Validation, RFC 4431 . */
 public static final int DLV		= 32769;
 
+/** SMIMEA; Hex #FFEA */
+public static final int SMIMEA		= 65514;
+
 
 private static class TypeMnemonic extends Mnemonic {
 	private HashMap objects;
@@ -284,6 +287,7 @@ static {
 	types.add(MAILA, "MAILA");
 	types.add(ANY, "ANY");
 	types.add(DLV, "DLV", new DLVRecord());
+	types.add(SMIMEA, "SMIMEA", new SMIMEARecord());
 }
 
 private
