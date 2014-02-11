@@ -53,6 +53,9 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
 /** Converts rdata to a String */
 String
 rrToString() {
+	if(address.getAddress().length == 4) {
+		return "::FFFF:" + address.getHostAddress();
+	}
 	return address.getHostAddress();
 }
 
