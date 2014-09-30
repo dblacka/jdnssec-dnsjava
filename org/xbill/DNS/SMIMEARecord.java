@@ -1,4 +1,3 @@
-// Copyright (c) 1999-2004 Brian Wellington (bwelling@xbill.org)
 
 package org.xbill.DNS;
 
@@ -6,9 +5,9 @@ import java.io.*;
 import org.xbill.DNS.utils.*;
 
 /**
- * Transport Layer Security Authentication
+ * S/MIME
  *
- * @author Brian Wellington
+ * @author 
  */
 
 public class SMIMEARecord extends Record {
@@ -53,9 +52,23 @@ public static class MatchingType {
 	public static final int SHA512 = 2;
 }
 
+public static class CertificateAccessType {
+	private CertificateAccessType() {}
+
+	/** No alternative method advertised */
+	public static final int NO = 0;
+
+	/** NAPTR record available */
+	public static final int NAPTR = 1;
+
+	/** X.509 certificates available in WebFinger */
+	public static final int WF = 2;
+}
+
 private int certificateUsage;
 private int selector;
 private int matchingType;
+private int certificateAccessType;
 private byte [] certificateAssociationData;
 
 SMIMEARecord() {}
@@ -72,18 +85,20 @@ getObject() {
  * @param selector The part of the TLS certificate presented by the server
  * that will be matched against the association data. 
  * @param matchingType How the certificate association is presented.
+ * @param certificateAccessType Alternative method for certificate discovery.
  * @param certificateAssociationData The "certificate association data" to be
  * matched.
  */
 public
 SMIMEARecord(Name name, int dclass, long ttl, 
-	   int certificateUsage, int selector, int matchingType,
+	   int certificateUsage, int selector, int matchingType, int certificateAccessType,
 	   byte [] certificateAssociationData)
 {
 	super(name, Type.SMIMEA, dclass, ttl);
 	this.certificateUsage = checkU8("certificateUsage", certificateUsage);
 	this.selector = checkU8("selector", selector);
 	this.matchingType = checkU8("matchingType", matchingType);
+	this.certificateAccessType = checkU8("certificateAccessType", certificateAccessType);
 	this.certificateAssociationData = checkByteArrayLength(
 						"certificateAssociationData",
 						certificateAssociationData,
@@ -95,6 +110,7 @@ rrFromWire(DNSInput in) throws IOException {
 	certificateUsage = in.readU8();
 	selector = in.readU8();
 	matchingType = in.readU8();
+	certificateAccessType = in.readU8();
 	certificateAssociationData = in.readByteArray();
 }
 
@@ -103,6 +119,7 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
 	certificateUsage = st.getUInt8();
 	selector = st.getUInt8();
 	matchingType = st.getUInt8();
+	certificateAccessType = st.getUInt8();
 	certificateAssociationData = st.getHex();
 }
 
@@ -116,6 +133,8 @@ rrToString() {
 	sb.append(" ");
 	sb.append(matchingType);
 	sb.append(" ");
+	sb.append(certificateAccessType);
+	sb.append(" ");
 	sb.append(base16.toString(certificateAssociationData));
 
 	return sb.toString();
@@ -126,6 +145,7 @@ rrToWire(DNSOutput out, Compression c, boolean canonical) {
 	out.writeU8(certificateUsage);
 	out.writeU8(selector);
 	out.writeU8(matchingType);
+	out.writeU8(certificateAccessType);
 	out.writeByteArray(certificateAssociationData);
 }
 
@@ -145,6 +165,12 @@ getSelector() {
 public int
 getMatchingType() {
 	return matchingType;
+}
+
+/** Returns the cert. access type of the SMIMEA record */
+public int
+getCertificateAccessType() {
+	return certificateAccessType;
 }
 
 /** Returns the certificate associate data of this SMIMEA record */
