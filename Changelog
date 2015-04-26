@@ -1,3 +1,64 @@
+4/21/2015:
+	- Update the URI record implementation to match the latest spec.
+	  (patch from Anthony Kirby <anthonykirby@users.sf.net>)
+
+2/15/2015
+	- 2.1.7 released
+
+2/14/2015
+	- Attempt to deal with Java's poor handling of IPv4-mapped IPv6
+	  addresses. (reported by Keshav Badruka <keshav.badruka@gmail.com>)
+
+12/23/2014
+	- Add an interface for logging sent/received packets.
+	  (based on a patch from Damian Minkov <damencho@users.sf.net>)
+	- Add support for the URI record.
+	  (patch from Anthony Kirby <anthonykirby@users.sf.net>)
+
+12/22/2014
+	- Fix message truncation to preserve the OPT record.
+	  (based on a patch from Klaus Malorny <Klaus.Malorny@knipp.de>)
+	- Properly deal with short DSA and ECDSA keys.  (original patch from
+	  Marcos Sanz <sanz@denic.de>, with some local modifications)
+	- Add support for GOST (RFC 5933) to DNSSEC.  Using GOST requires an
+	  external cryptography provider, such as BouncyCastle.
+	  (original patch from Marcos Sanz <sanz@denic.de>, with some
+	  local modifications)
+	- Change the OPTRecord equals() method to check TTL, since the TTL
+	  field holds relevant information.  (based on a patch from
+	  Dr. Christian Möller <cmoeller@users.sourceforge.net>)
+	- Printing an empty RRset would incorrectly throw an exception.
+
+10/14/2013
+	- 2.1.6 released
+	- Address.getByName() and Address.getAllByName() had incomplete IPv6
+	  support; they wouldn't issue AAAA queries.
+	  (reported by Cédric Braem <cbr@internetvista.com>)
+
+10/07/2013
+	- Improve the name server detection code for Android.
+	  (patch from Florian Schmaus <fschmaus@gmail.com>, based on
+	   stackoverflow.com/a/11362271/194894).
+
+08/07/2013
+	- Change the edns-client-subnet option to use the officially defined
+	  option code.
+
+07/29/2013
+	- SIG(0) signatures were incorrectly generated in some cases.
+	  (patch from Tekto <tekto@geekr.de>)
+	- Add NoSignature exception, thrown when attempting to validate a
+	  SIG(0) in a message without one.
+
+05/04/2013
+	- The Name(String s, Name origin) constructor copies too many labels
+	  when origin has been created by stripping a label.
+	  (patch from Ingo Bauersachs <ingo@jitsi.org>)
+
+04/10/2013
+	- Fix Name.isAbsolute() to check that the length of the last label is
+	  0, not that the last byte of the name is 0.
+
 04/10/2013
 	- 2.1.5 released
 

@@ -189,6 +189,11 @@ public static final int MAILA		= 254;
 /** Matches any type */
 public static final int ANY		= 255;
 
+/** URI
+ * @see <a href="http://tools.ietf.org/html/draft-faltstrom-uri-14">draft-faltstrom-uri-14</a>
+ */
+public static final int URI		= 256;
+
 /** DNSSEC Lookaside Validation, RFC 4431 . */
 public static final int DLV		= 32769;
 
@@ -286,6 +291,7 @@ static {
 	types.add(MAILB, "MAILB");
 	types.add(MAILA, "MAILA");
 	types.add(ANY, "ANY");
+	types.add(URI, "URI", new URIRecord());
 	types.add(DLV, "DLV", new DLVRecord());
 	types.add(SMIMEA, "SMIMEA", new SMIMEARecord());
 }

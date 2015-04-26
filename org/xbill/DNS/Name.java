@@ -273,7 +273,8 @@ Name(String s, Name origin) throws TextParseException {
 		appendFromString(s, label, 0, 1);
 	}
 	if (origin != null && !absolute)
-		appendFromString(s, origin.name, 0, origin.getlabels());
+		appendFromString(s, origin.name, origin.offset(0),
+				 origin.getlabels());
 }
 
 /**
@@ -548,9 +549,10 @@ isWild() {
  */
 public boolean
 isAbsolute() {
-	if (labels() == 0)
+	int nlabels = labels();
+	if (nlabels == 0)
 		return false;
-	return (name[name.length - 1] == 0);
+        return name[offset(nlabels - 1)] == 0;
 }
 
 /**

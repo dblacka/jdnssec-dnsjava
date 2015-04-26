@@ -13,20 +13,14 @@ The differences between this version of DNSJava and the official version are:
    that the jdnssec-signzone tool can add the original ownername as a
    comment.
 
-4. org.xbill.DNS.AAAARecord.rrToWire() has been updated to correctly
-   format IPv6 mapped IPv4 addresses.  The official version will
-   output a 4 octet RDATA field.
-
-5. A base32 test driver exists.  Unfortunately, this was left out of
+4. A base32 test driver exists.  Unfortunately, this was left out of
    the patch submission that added the base32 class to DNSJava.
 
-6. The testcase, org.xbill.DNS.DNSSECWithLunaDriverTest has been
+5. The testcase, org.xbill.DNS.DNSSECWithLunaDriverTest has been
    disabled (by renaming it to
    DNSSECWithLunaDriverTest.java.disabled), as it won't compile
    without the Luna API present.
 
-7. The AddressTest testcase has been updated with new expected results
-   to make it pass.  This testcase is querying existing, public DNS
-   entries which have a tendency to change, causing the test to fail.
+6. TSIG.HMAC_MD5_STR has been downcased to solve some interop problems.
 
-8. TSIG.HMAC_MD5_STR has been downcased to solve some interop problems.
+7. The SMIMEA record type has been added.

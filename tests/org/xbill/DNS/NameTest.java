@@ -193,6 +193,16 @@ public class NameTest extends TestCase
 	    assertEquals("", n.getLabelString(7));
 	}
 
+	public void test_ctor_removed_label() throws TextParseException, NameTooLongException
+	{
+		String pre = "prepend";
+		Name stripped = new Name(Name.fromString("sub.domain.example."), 1);
+		Name concat = new Name(pre, stripped);
+		assertEquals(Name.concatenate(Name.fromString(pre), stripped), concat);
+		assertEquals(Name.fromString(pre, stripped), concat);
+		assertEquals("prepend.domain.example.", concat.toString());
+	}
+
 	public void test_ctor_abs_abs_origin() throws TextParseException
 	{
 	    Name n = new Name(m_abs, m_abs_origin);
@@ -1209,6 +1219,20 @@ public class NameTest extends TestCase
 	assertEquals(n2.toString(true) + ".", n2.toString(false));
 	assertEquals(Name.root.toString(true), Name.root.toString(false));
 	assertEquals(Name.empty.toString(true), Name.empty.toString(false));
+    }
+
+    public void test_absolute() throws TextParseException {
+        Name n1 = new Name("abc.com");
+        Name n2 = new Name("abc.com.");
+        Name n3 = new Name("abc.com", Name.root);
+        Name n4 = new Name("abc.com", n1);
+        Name n5 = new Name("abc.com\\000");
+
+        assertFalse(n1.isAbsolute());
+        assertTrue(n2.isAbsolute());
+        assertTrue(n3.isAbsolute());
+        assertFalse(n4.isAbsolute());
+        assertFalse(n5.isAbsolute());
     }
 
     public static Test suite()

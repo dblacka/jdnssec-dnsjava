@@ -277,13 +277,13 @@ public class AddressTest extends TestCase
 
 	out = Address.getByName("serl.cs.colorado.edu");
 	assertEquals("epic.cs.colorado.edu", out.getCanonicalHostName());
-	assertEquals("128.138.201.71", out.getHostAddress());
+	assertEquals("128.138.72.229", out.getHostAddress());
     }
 
     public void test_getByName_invalid() throws UnknownHostException
     {
 	try {
-	    Address.getByName("bogushost.com");
+	    Address.getByName("example.invalid");
 	    fail("UnknownHostException not thrown");
 	}
 	catch( UnknownHostException e ){
@@ -305,7 +305,7 @@ public class AddressTest extends TestCase
 	out = Address.getAllByName("serl.cs.colorado.edu");
 	assertEquals(1, out.length);
 	assertEquals("epic.cs.colorado.edu", out[0].getCanonicalHostName());
-	assertEquals("128.138.201.71", out[0].getHostAddress());
+	assertEquals("128.138.72.229", out[0].getHostAddress());
 
 	out = Address.getAllByName("cnn.com");
 	assertTrue(out.length > 1);
@@ -317,7 +317,7 @@ public class AddressTest extends TestCase
     public void test_getAllByName_invalid() throws UnknownHostException
     {
 	try {
-	    Address.getAllByName("bogushost.com");
+	    Address.getAllByName("example.invalid");
 	    fail("UnknownHostException not thrown");
 	}
 	catch( UnknownHostException e ){
