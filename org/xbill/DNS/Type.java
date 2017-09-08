@@ -165,6 +165,12 @@ public static final int NSEC3PARAM	= 51;
 /** Transport Layer Security Authentication, draft-ietf-dane-protocol-23 */
 public static final int TLSA		= 52;
 
+/** S/MIME cert association, draft-ietf-dane-smime */
+public static final int SMIMEA    = 53;
+
+/** OpenPGP Key, RFC 7929 */
+public static final int OPENPGPKEY  = 61;
+
 /** Sender Policy Framework (experimental) */
 public static final int SPF		= 99;
 
@@ -194,11 +200,11 @@ public static final int ANY		= 255;
  */
 public static final int URI		= 256;
 
+/** Certification Authority Authorization, RFC 6844 */
+public static final int CAA   = 257;
+
 /** DNSSEC Lookaside Validation, RFC 4431 . */
 public static final int DLV		= 32769;
-
-/** SMIMEA; Hex #FFEA */
-public static final int SMIMEA		= 65514;
 
 
 private static class TypeMnemonic extends Mnemonic {
@@ -283,6 +289,8 @@ static {
 	types.add(NSEC3, "NSEC3", new NSEC3Record());
 	types.add(NSEC3PARAM, "NSEC3PARAM", new NSEC3PARAMRecord());
 	types.add(TLSA, "TLSA", new TLSARecord());
+	types.add(SMIMEA, "SMIMEA", new SMIMEARecord());
+	types.add(OPENPGPKEY, "OPENPGPKEY", new OPENPGPKEYRecord());	
 	types.add(SPF, "SPF", new SPFRecord());
 	types.add(TKEY, "TKEY", new TKEYRecord());
 	types.add(TSIG, "TSIG", new TSIGRecord());
@@ -292,8 +300,8 @@ static {
 	types.add(MAILA, "MAILA");
 	types.add(ANY, "ANY");
 	types.add(URI, "URI", new URIRecord());
+	types.add(CAA, "CAA", new CAARecord());
 	types.add(DLV, "DLV", new DLVRecord());
-	types.add(SMIMEA, "SMIMEA", new SMIMEARecord());
 }
 
 private
