@@ -1,0 +1,19 @@
+root = true
+
+[*]
+indent_style = tab
+indent_size = 8
+insert_final_newline = true
+charset = latin1
+
+[*.yml]
+indent_style = space
+indent_size = 2
+
+[{pom.xml,*.md}]
+indent_style = space
+indent_size = 4
+
+[.editorconfig]
+charset = utf-8
+

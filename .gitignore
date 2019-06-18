@@ -2,4 +2,8 @@ build
 *.jar
 .classpath
 .project
-.settings
+.settings/
+.idea/
+*.iml
+target/
+

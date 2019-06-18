@@ -19,6 +19,9 @@ private static NameService nameService;
 
 static {
 	ClassLoader loader = NameService.class.getClassLoader();
+	if (loader == null) {
+		loader = Thread.currentThread().getContextClassLoader();
+	}
 	nameService = (NameService) Proxy.newProxyInstance(loader,
 			new Class[] { NameService.class },
 			new DNSJavaNameService());

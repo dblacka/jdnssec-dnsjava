@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>dnsjava</groupId>
+    <artifactId>dnsjava</artifactId>
+    <packaging>bundle</packaging>
+    <version>2.1.9</version>
+    <name>dnsjava</name>
+    <description>dnsjava is an implementation of DNS in Java. It supports all defined record types (including the DNSSEC types), and unknown types. It can be used for queries, zone transfers, and dynamic updates. It includes a cache which can be used by clients, and a minimal implementation of a server. It supports TSIG authenticated messages, partial DNSSEC verification, and EDNS0. </description>
+    <url>http://www.dnsjava.org</url>
+    <organization>
+        <name>dnsjava.org</name>
+        <url>http://www.dnsjava.org</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>BSD-2-Clause</name>
+            <url>https://opensource.org/licenses/BSD-2-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/dnsjava/dnsjava</connection>
+        <developerConnection>scm:git:https://github.com/dnsjava/dnsjava</developerConnection>
+        <url>https://github.com/dnsjava/dnsjava</url>
+        <tag>v2.1.9</tag>
+    </scm>
+    <developers>
+        <developer>
+            <id>bwelling</id>
+            <name>Brian Wellington</name>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>iso8859-1</project.build.sourceEncoding>
+        <target.jdk>1.4</target.jdk>
+    </properties>
+
+    <build>
+        <sourceDirectory>./</sourceDirectory>
+        <testSourceDirectory>./tests</testSourceDirectory>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${target.jdk}</source>
+                    <target>${target.jdk}</target>
+                    <testExcludes>
+                        <!-- Exclude unit tests with external dependencies -->
+                        <exclude>**/DNSSECWithLunaProviderTest.java</exclude>
+                    </testExcludes>
+                    <includes>
+                        <include>*.java</include>
+                        <include>org/**/*.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>org/xbill/DNS/tests/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <includes>
+                        <include>*.java</include>
+                        <include>org/**/*.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>org/xbill/DNS/tests/</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>4.2.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Name>dnsjava is an implementation of DNS in Java</Bundle-Name>
+                        <Bundle-SymbolicName>org.xbill.dns</Bundle-SymbolicName>
+                        <Automatic-Module-Name>org.dnsjava</Automatic-Module-Name>
+                        <Export-Package>
+                            org.xbill.DNS.*
+                        </Export-Package>
+                        <Import-Package>
+                            !org.xbill.DNS*,!sun.*,*
+                        </Import-Package>
+                        <Bundle-RequiredExecutionEnvironment>J2SE-1.4</Bundle-RequiredExecutionEnvironment>
+                        <_removeheaders>Bnd-*, Tool, Require-Capability</_removeheaders>
+                    </instructions>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <excludePackageNames>*.tests.*</excludePackageNames>
+                    <sourcepath>./org</sourcepath>
+                    <debug>true</debug>
+                    <windowtitle>dnsjava documentation</windowtitle>
+                    <footer/>
+                    <doclint>none</doclint>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.4</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.3.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.siom79.japicmp</groupId>
+                <artifactId>japicmp-maven-plugin</artifactId>
+                <version>0.14.0</version>
+                <configuration>
+                    <parameter>
+                        <onlyModified>true</onlyModified>
+                        <!-- Disable until we're actually using semver -->
+                        <breakBuildBasedOnSemanticVersioning>false</breakBuildBasedOnSemanticVersioning>
+                        <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+                        <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+                        <excludes>
+                            <!-- JDK9 removed the Nameservice SPI as per bug 8134577. -->
+                            <exclude>org.xbill.DNS.spi</exclude>
+                            <!-- The tests don't need to be compatible -->
+                            <exclude>tests.org.xbill.DNS</exclude>
+                        </excludes>
+                    </parameter>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check-compatibility</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>cmp</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>spi-up-to-java8</id>
+            <activation>
+                <jdk>(,1.8]</jdk>
+            </activation>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>org/xbill/DNS/spi/</directory>
+                        <targetPath>META-INF</targetPath>
+                        <includes>
+                            <include>services/</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+
+        <profile>
+            <!-- JDK9 removed the Nameservice SPI as per bug 8134577. There's no replacement. -->
+            <id>no-spi-on-java9</id>
+            <activation>
+                <jdk>[1.9,)</jdk>
+            </activation>
+
+            <properties>
+                <target.jdk>9</target.jdk>
+                <maven.compiler.release>${target.jdk}</maven.compiler.release>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>org/xbill/DNS/tests/**</exclude>
+                                <exclude>org/xbill/DNS/spi/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <excludePackageNames>*.tests.*:*.spi.*</excludePackageNames>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+</project>

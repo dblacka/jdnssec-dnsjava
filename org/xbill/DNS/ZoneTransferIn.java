@@ -33,7 +33,6 @@ import java.util.*;
  *
  * @author Brian Wellington
  */
-
 public class ZoneTransferIn {
 
 private static final int INITIALSOA	= 0;
@@ -66,10 +65,10 @@ private Record initialsoa;
 
 private int rtype;
 
+/**
+ * All changes between two versions of a zone in an IXFR response.
+ */
 public static class Delta {
-	/**
-	 * All changes between two versions of a zone in an IXFR response.
-	 */
 
 	/** The starting serial number of this delta. */
 	public long start;
@@ -90,10 +89,10 @@ public static class Delta {
 	}
 }
 
+/**
+ * Handles a Zone Transfer.
+ */
 public static interface ZoneTransferHandler {
-	/**
-	 * Handles a Zone Transfer.
-	 */
 
 	/**
 	 * Called when an AXFR transfer begins.
@@ -196,7 +195,6 @@ ZoneTransferIn(Name zone, int xfrtype, long serial, boolean fallback,
  * @param address The host/port from which to transfer the zone.
  * @param key The TSIG key used to authenticate the transfer, or null.
  * @return The ZoneTransferIn object.
- * @throws UnknownHostException The host does not exist.
  */
 public static ZoneTransferIn
 newAXFR(Name zone, SocketAddress address, TSIG key) {
@@ -245,7 +243,6 @@ throws UnknownHostException
  * @param address The host/port from which to transfer the zone.
  * @param key The TSIG key used to authenticate the transfer, or null.
  * @return The ZoneTransferIn object.
- * @throws UnknownHostException The host does not exist.
  */
 public static ZoneTransferIn
 newIXFR(Name zone, long serial, boolean fallback, SocketAddress address,

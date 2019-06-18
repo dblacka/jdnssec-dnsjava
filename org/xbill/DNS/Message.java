@@ -4,6 +4,7 @@ package org.xbill.DNS;
 
 import java.util.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 
 /**
  * A DNS Message.  A message is the basic unit of communication between
@@ -133,6 +134,15 @@ Message(DNSInput in) throws IOException {
 public
 Message(byte [] b) throws IOException {
 	this(new DNSInput(b));
+}
+
+/**
+ * Creates a new Message from its DNS wire format representation
+ * @param byteBuffer A ByteBuffer containing the DNS Message.
+ */
+public
+Message(ByteBuffer byteBuffer) throws IOException {
+    this(new DNSInput(byteBuffer));
 }
 
 /**
@@ -405,28 +415,28 @@ sectionToWire(DNSOutput out, int section, Compression c,
 	int n = sections[section].size();
 	int pos = out.current();
 	int rendered = 0;
-	int skipped = 0;
+	int count = 0;
 	Record lastrec = null;
 
 	for (int i = 0; i < n; i++) {
 		Record rec = (Record)sections[section].get(i);
 		if (section == Section.ADDITIONAL && rec instanceof OPTRecord) {
-			skipped++;
 			continue;
 		}
 
 		if (lastrec != null && !sameSet(rec, lastrec)) {
 			pos = out.current();
-			rendered = i;
+			rendered = count;
 		}
 		lastrec = rec;
 		rec.toWire(out, section, c);
 		if (out.current() > maxLength) {
 			out.jump(pos);
-			return n - rendered + skipped;
+			return n - rendered;
 		}
+		count++;
 	}
-	return skipped;
+	return n - count;
 }
 
 /* Returns true if the message could be rendered. */
@@ -565,8 +575,6 @@ sectionToString(int i) {
 			sb.append(", type = " + Type.string(rec.type));
 			sb.append(", class = " + DClass.string(rec.dclass));
 		}
-		else if (rec.getType() == Type.OPT)
-		    continue;
 		else
 			sb.append(rec);
 		sb.append("\n");
@@ -592,18 +600,6 @@ toString() {
 		else
 			sb.append("invalid");
 		sb.append('\n');
-	}
-	if (opt != null) {
-	    sb.append(";; OPT PSEUDOSECTION:\n");
-	    sb.append(";  EDNS: version: ");
-	    sb.append(opt.getVersion());
-	    sb.append(", flags:");
-	    if ((opt.getFlags() & ExtendedFlags.DO) != 0) {
-	        sb.append(" do");
-	    }
-	    sb.append("; udp: ");
-	    sb.append(opt.getPayloadSize());
-	    sb.append("\n");
 	}
 	for (int i = 0; i < 4; i++) {
 		if (header.getOpcode() != Opcode.UPDATE)

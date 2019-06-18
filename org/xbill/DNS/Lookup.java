@@ -181,7 +181,7 @@ setDefaultSearchPath(String [] domains) throws TextParseException {
 
 /**
  * Sets a custom logger that will be used to log the send and received packets.
- * @param logger
+ * @param logger The logger
  */
 public static synchronized void
 setPacketLogger(PacketLogger logger)
@@ -400,7 +400,7 @@ follow(Name name, Name oldname) {
 	nxdomain = false;
 	referral = false;
 	iterations++;
-	if (iterations >= 6 || name.equals(oldname)) {
+	if (iterations >= 10 || name.equals(oldname)) {
 		result = UNRECOVERABLE;
 		error = "CNAME loop";
 		done = true;
