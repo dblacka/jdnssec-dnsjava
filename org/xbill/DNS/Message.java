@@ -575,6 +575,8 @@ sectionToString(int i) {
 			sb.append(", type = " + Type.string(rec.type));
 			sb.append(", class = " + DClass.string(rec.dclass));
 		}
+		else if (rec.getType() == Type.OPT)
+			continue;
 		else
 			sb.append(rec);
 		sb.append("\n");
@@ -600,6 +602,18 @@ toString() {
 		else
 			sb.append("invalid");
 		sb.append('\n');
+	}
+	if (opt != null) {
+	    sb.append(";; OPT PSEUDOSECTION:\n");
+	    sb.append(";  EDNS: version: ");
+	    sb.append(opt.getVersion());
+	    sb.append(", flags:");
+	    if ((opt.getFlags() & ExtendedFlags.DO) != 0) {
+		sb.append(" do");
+	    }
+	    sb.append("; udp: ");
+	    sb.append(opt.getPayloadSize());
+	    sb.append("\n");
 	}
 	for (int i = 0; i < 4; i++) {
 		if (header.getOpcode() != Opcode.UPDATE)
