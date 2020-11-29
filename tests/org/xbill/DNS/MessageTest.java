@@ -131,7 +131,7 @@ public class MessageTest
             assertEquals(2, records.length);
             assertEquals(TXTRecord.class, records[0].getClass());
             assertEquals(OPTRecord.class, records[1].getClass());
-	}
+        }
 
     }
 

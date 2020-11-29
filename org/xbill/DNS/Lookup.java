@@ -23,7 +23,6 @@ import java.net.*;
  *
  * @author Brian Wellington
  */
-
 public final class Lookup {
 
 private static Resolver defaultResolver;

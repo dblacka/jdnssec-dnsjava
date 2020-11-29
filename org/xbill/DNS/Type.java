@@ -298,7 +298,7 @@ static {
 	types.add(SMIMEA, "SMIMEA", new SMIMEARecord());
 	types.add(CDNSKEY, "CDNSKEY", new CDNSKEYRecord());
 	types.add(CDS, "CDS", new CDSRecord());
-	types.add(OPENPGPKEY, "OPENPGPKEY", new OPENPGPKEYRecord());	
+	types.add(OPENPGPKEY, "OPENPGPKEY", new OPENPGPKEYRecord());
 	types.add(SPF, "SPF", new SPFRecord());
 	types.add(TKEY, "TKEY", new TKEYRecord());
 	types.add(TSIG, "TSIG", new TSIGRecord());

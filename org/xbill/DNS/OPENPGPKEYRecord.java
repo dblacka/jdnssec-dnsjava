@@ -22,7 +22,7 @@ OPENPGPKEYRecord() {}
 
 Record
 getObject() {
-  return new OPENPGPKEYRecord();
+	return new OPENPGPKEYRecord();
 }
 
 /**
@@ -33,18 +33,18 @@ getObject() {
 public
 OPENPGPKEYRecord(Name name, int dclass, long ttl, byte [] cert)
 {
-  super(name, Type.OPENPGPKEY, dclass, ttl);
-  this.cert = cert;
+	super(name, Type.OPENPGPKEY, dclass, ttl);
+	this.cert = cert;
 }
 
 void
 rrFromWire(DNSInput in) throws IOException {
-  cert = in.readByteArray();
+	cert = in.readByteArray();
 }
 
 void
 rdataFromString(Tokenizer st, Name origin) throws IOException {
-  cert = st.getBase64();
+	cert = st.getBase64();
 }
 
 /**
@@ -52,16 +52,16 @@ rdataFromString(Tokenizer st, Name origin) throws IOException {
  */
 String
 rrToString() {
-  StringBuffer sb = new StringBuffer();
-  if (cert != null) {
-    if (Options.check("multiline")) {
-      sb.append("(\n");
-      sb.append(base64.formatString(cert, 64, "\t", true));
-    } else {
-      sb.append(base64.toString(cert));
-    }
-  }
-  return sb.toString();
+	StringBuffer sb = new StringBuffer();
+	if (cert != null) {
+		if (Options.check("multiline")) {
+			sb.append("(\n");
+			sb.append(base64.formatString(cert, 64, "\t", true));
+		} else {
+			sb.append(base64.toString(cert));
+		}
+	}
+	return sb.toString();
 }
 
 /**
@@ -70,12 +70,12 @@ rrToString() {
 public byte []
 getCert()
 {
-  return cert;
+	return cert;
 }
 
 void
 rrToWire(DNSOutput out, Compression c, boolean canonical) {
-  out.writeByteArray(cert);
+	out.writeByteArray(cert);
 }
 
 }

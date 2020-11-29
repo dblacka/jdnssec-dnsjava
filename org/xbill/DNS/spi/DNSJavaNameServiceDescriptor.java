@@ -12,7 +12,6 @@ import sun.net.spi.nameservice.*;
  * @author Brian Wellington
  * @author Paul Cowan (pwc21@yahoo.com)
  */
-
 public class DNSJavaNameServiceDescriptor implements NameServiceDescriptor {
 
 private static NameService nameService;

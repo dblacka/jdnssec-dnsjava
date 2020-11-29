@@ -707,9 +707,9 @@ DSASignaturefromDNS(byte [] dns) throws DNSSECException, IOException {
 			rlen--;
 
 	byte [] s = in.readByteArray(DSA_LEN);
-        int slen = DSA_LEN;
-        if (s[0] < 0)
-                slen++;
+	int slen = DSA_LEN;
+	if (s[0] < 0)
+		slen++;
 	else
 		for(int i = 0; i < DSA_LEN - 1 && s[i] == 0 && s[i+1] >= 0; i++)
 			slen--;
@@ -722,7 +722,7 @@ DSASignaturefromDNS(byte [] dns) throws DNSSECException, IOException {
 	if (rlen > DSA_LEN)
 		out.writeU8(0);
 	if (rlen >= DSA_LEN)
-	out.writeByteArray(r);
+		out.writeByteArray(r);
 	else
 		out.writeByteArray(r, DSA_LEN - rlen, rlen);
 
@@ -731,7 +731,7 @@ DSASignaturefromDNS(byte [] dns) throws DNSSECException, IOException {
 	if (slen > DSA_LEN)
 		out.writeU8(0);
 	if (slen >= DSA_LEN)
-	out.writeByteArray(s);
+		out.writeByteArray(s);
 	else
 		out.writeByteArray(s, DSA_LEN - slen, slen);
 
@@ -837,7 +837,7 @@ ECDSASignaturefromDNS(byte [] signature, ECKeyInfo keyinfo)
 	if (rlen > keyinfo.length)
 		out.writeU8(0);
 	if (rlen >= keyinfo.length)
-	out.writeByteArray(r);
+		out.writeByteArray(r);
 	else
 		out.writeByteArray(r, keyinfo.length - rlen, rlen);
 
@@ -846,7 +846,7 @@ ECDSASignaturefromDNS(byte [] signature, ECKeyInfo keyinfo)
 	if (slen > keyinfo.length)
 		out.writeU8(0);
 	if (slen >= keyinfo.length)
-	out.writeByteArray(s);
+		out.writeByteArray(s);
 	else
 		out.writeByteArray(s, keyinfo.length - slen, slen);
 
@@ -866,6 +866,7 @@ ECDSASignaturetoDNS(byte [] signature, ECKeyInfo keyinfo) throws IOException {
 	tmp = in.readU8();
 	if (tmp != ASN1_INT)
 		throw new IOException("Invalid ASN.1 data, expected " + ASN1_INT + " got " + tmp);
+
 	int rlen = in.readU8();
 	if (rlen == keyinfo.length + 1 && in.readU8() == 0) {
 		--rlen;
